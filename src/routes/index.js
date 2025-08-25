@@ -27,6 +27,6 @@ if(loading){
 }
 
 return(
-    signed ? <AppRoutes /> : <AuthRoutes/>
+    signed ? <AppRoutes/> : <AuthRoutes/>
 )
 }

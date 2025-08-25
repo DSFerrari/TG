@@ -4,7 +4,7 @@ export default function Profiles(){
 return(
     <View>
         <Text>
-            ola
+            ola profiles
         </Text>
     </View>
 )

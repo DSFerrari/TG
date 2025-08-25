@@ -4,7 +4,7 @@ export default function Configuration(){
 return(
     <View>
         <Text>
-            ola
+            ola Configuration
         </Text>
     </View>
 )

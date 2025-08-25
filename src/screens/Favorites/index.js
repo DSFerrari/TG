@@ -4,7 +4,7 @@ export default function Favorites(){
 return(
     <View>
         <Text>
-            ola
+            ola favoritos
         </Text>
     </View>
 )
