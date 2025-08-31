@@ -10,7 +10,8 @@ export const styles = StyleSheet.create({
         paddingVertical: 1,
         fontSize: 16,
         height: 60,
-        width: 350
+        width: "100%",
+        borderStyle: 'solid'
         },
         textwithinput:{
         backgroundColor: theme.COLORS.WHITE3,

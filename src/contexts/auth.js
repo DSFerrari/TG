@@ -1,6 +1,7 @@
 import { createContext, useState, useEffect } from "react";
 import { supabase } from "../services/supabase";
 import { useNavigation } from "@react-navigation/native";
+import { Alert } from "react-native";
 
 export const AuthContext = createContext({});
 
@@ -50,7 +51,7 @@ async function signIn(email,password) {
         }
         
 
-        setLoading(true);
+        setLoadingAuth(true);
 
         
         const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -60,13 +61,13 @@ async function signIn(email,password) {
 
         if (authError) {
             Alert.alert("Erro no cadastro", authError.message);
-            setLoading(false);
+            setLoadingAuth(false);
             return;
         }
 
         if (!authData.user) {
             Alert.alert("Erro", "Não foi possível criar o usuário. Tente novamente.");
-            setLoading(false);
+            setLoadingAuth(false);
             return;
         }
 
@@ -85,7 +86,7 @@ async function signIn(email,password) {
             Alert.alert("Sucesso!", "Cadastro realizado. Verifique seu e-mail para confirmar a conta.");
         }
 
-        setLoading(false);
+        setLoadingAuth(false);
         navigation.goBack();
   }
 

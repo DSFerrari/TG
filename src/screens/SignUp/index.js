@@ -1,22 +1,28 @@
 import {Text, KeyboardAvoidingView, SafeAreaView,
 Platform,
 Keyboard,
-TouchableWithoutFeedback
+TouchableWithoutFeedback,
+ScrollView,
+Alert
 } from "react-native";
 import { styles } from "./styles";
 import TextInputMAI from "./../../components/TextInputMAI"
-import { useState } from "react";
-import DeficienciaSelect from "../../components/PickerModal";
+import { useContext, useState } from "react";
 import ButtonMAI from "../../components/ButtonMAI";
 import { useNavigation } from "@react-navigation/native";
+import CheckboxDeficiencias from "../../components/CheckboxDeficiencias";
+import { AuthContext } from "../../contexts/auth";
+
 
 export default function SignUp(){
 const [dataNascimento,setDataNascimento] = useState("");
-const [deficiencia, setDeficiencia] = useState("");
 const [nome,setNome] = useState("");
 const [email,setEmail] = useState("");
 const [senha,setSenha] = useState("");
 const [confSenha, setConfSenha] = useState("");
+const [deficienciasMultiplas, setDeficienciasMultiplas] = useState([]);
+
+const { signUp, loadingAuth } = useContext(AuthContext);
 
 const formatarData = (text) => {
     const numeros = text.replace(/\D/g, '');
@@ -33,6 +39,51 @@ const formatarData = (text) => {
     setDataNascimento(formatado);
 };
 
+const handleCadastro = async () => {
+    if (!nome.trim() || !email.trim() || !senha.trim() || !confSenha.trim() || !dataNascimento.trim()) {
+        Alert.alert("Erro", "Por favor, preencha todos os campos obrigatórios!");
+        return;
+    }
+
+    if (senha !== confSenha) {
+        Alert.alert("Erro", "As senhas não coincidem!");
+        return;
+    }
+
+    const dataFormatada = converterData(dataNascimento);
+    if (!dataFormatada) {
+        Alert.alert("Erro", "Data de nascimento inválida!");
+        return;
+    }
+
+    const deficienciasString = deficienciasMultiplas.length > 0 ? deficienciasMultiplas.join(',') : null;
+try{
+    await signUp(email, senha, confSenha, nome, dataFormatada, deficienciasString);
+} catch (error){
+    console.log(error)
+}
+};
+
+const converterData = (dataInput) => {
+    if (dataInput.length !== 10) return null;
+    
+    const [dia, mes, ano] = dataInput.split('/');
+    const data = new Date(ano, mes - 1, dia);
+    
+    if (isNaN(data.getTime())) return null;
+    
+    return `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
+};
+
+const handleDeficienciaChange = (value) => {
+    console.log("Deficiência selecionada:", value); // Debug
+    setDeficiencia(value);
+    if (value !== "multipla") {
+        setDeficienciasMultiplas([]);
+    }
+};
+
+
 const navegar = useNavigation();
 
 return(
@@ -43,6 +94,10 @@ return(
      style={styles.container}
    behavior={Platform.OS === 'ios' ? 'padding': 'height'}
     >
+        <ScrollView contentContainerStyle={{flexGrow: 1, paddingBottom: 20}}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        >
         <SafeAreaView>
             <Text style={styles.titulo}>Cadastro</Text>
             <TextInputMAI
@@ -60,10 +115,11 @@ return(
             maxLength={10}
             />
 
-           <DeficienciaSelect
-           value={deficiencia}
-           onChange={setDeficiencia}
-           />
+               <CheckboxDeficiencias
+                   selectedDeficiencias={deficienciasMultiplas}
+                   onSelectionChange={setDeficienciasMultiplas}
+               />
+           
 
            <TextInputMAI
            texto="Email"
@@ -86,13 +142,15 @@ return(
            <ButtonMAI
            name="Cadastrar"
            limpo={true}
+           onPress={handleCadastro}
            />
 
            <ButtonMAI
            name="Ja tenho cadastro"
            onPress={() => navegar.goBack()}
-           />
+           /> 
         </SafeAreaView>
+        </ScrollView>
     </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
 )

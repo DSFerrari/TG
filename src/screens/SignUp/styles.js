@@ -4,7 +4,7 @@ import theme from "../../theme";
 export const styles = StyleSheet.create({
     container:{
         flex:1,
-        alignItems: 'center',
+        paddingHorizontal: 24,
         backgroundColor: theme.COLORS.WHITE3
     },
     titulo:{

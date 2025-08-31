@@ -3,9 +3,9 @@ import theme from '../../theme';
 
 export const styles = StyleSheet.create({
     container:{
-        alignItems: 'center',
         backgroundColor: theme.COLORS.WHITE3,
         flex: 1,
+        paddingHorizontal:24
     },
     titulo:{
         marginTop: 50,
