@@ -39,30 +39,36 @@ const formatarData = (text) => {
     setDataNascimento(formatado);
 };
 
-const handleCadastro = async () => {
-    if (!nome.trim() || !email.trim() || !senha.trim() || !confSenha.trim() || !dataNascimento.trim()) {
-        Alert.alert("Erro", "Por favor, preencha todos os campos obrigatórios!");
-        return;
-    }
+  const handleCadastro = async () => {
+        if (!nome.trim() || !email.trim() || !senha.trim() || !confSenha.trim() || !dataNascimento.trim()) {
+            Alert.alert("Erro", "Por favor, preencha todos os campos obrigatórios!");
+            return;
+        }
+    
+        if (senha !== confSenha) {
+            Alert.alert("Erro", "As senhas não coincidem!");
+            return;
+        }
+    
+        const dataFormatada = converterData(dataNascimento);
+        if (!dataFormatada) {
+            Alert.alert("Erro", "Data de nascimento inválida!");
+            return;
+        }
 
-    if (senha !== confSenha) {
-        Alert.alert("Erro", "As senhas não coincidem!");
-        return;
-    }
+        const deficienciasString = deficienciasMultiplas.length > 0 ? deficienciasMultiplas : [];
 
-    const dataFormatada = converterData(dataNascimento);
-    if (!dataFormatada) {
-        Alert.alert("Erro", "Data de nascimento inválida!");
-        return;
-    }
-
-    const deficienciasString = deficienciasMultiplas.length > 0 ? deficienciasMultiplas.join(',') : null;
-try{
-    await signUp(email, senha, confSenha, nome, dataFormatada, deficienciasString);
-} catch (error){
-    console.log(error)
-}
-};
+        try {
+            const success = await signUp(email, senha, nome, dataFormatada, deficienciasString);
+            
+            if (success) {
+                
+                navegar.navigate('ConfirmEmail', { email: email });
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    };
 
 const converterData = (dataInput) => {
     if (dataInput.length !== 10) return null;
@@ -74,15 +80,6 @@ const converterData = (dataInput) => {
     
     return `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
 };
-
-const handleDeficienciaChange = (value) => {
-    console.log("Deficiência selecionada:", value); // Debug
-    setDeficiencia(value);
-    if (value !== "multipla") {
-        setDeficienciasMultiplas([]);
-    }
-};
-
 
 const navegar = useNavigation();
 

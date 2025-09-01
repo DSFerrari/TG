@@ -17,13 +17,11 @@ const { signIn, loadingAuth} = useContext(AuthContext);
 const navegar = useNavigation();
 
 const handleLogin = async () => {
-    // Validações básicas
     if (!email.trim() || !senha.trim()) {
         Alert.alert("Erro", "Por favor, preencha todos os campos!");
         return;
     }
 
-    // Validação básica de email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
         Alert.alert("Erro", "Por favor, insira um email válido!");
@@ -70,7 +68,7 @@ return(
     onChangeText={setSenha}
     />
 
-   <TouchableOpacity style={styles.forgot}>
+   <TouchableOpacity style={styles.forgot} onPress={() => navegar.navigate("Esqueci minha senha")}>
       <Text style={styles.forgotText}>Esqueci minha senha</Text>
    </TouchableOpacity>
    <ButtonMAI 

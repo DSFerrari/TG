@@ -9,7 +9,7 @@ import AppRoutes from "./app.routes"
 import { useContext } from "react";
 
 export default function Routes(){
-const {signed,loading} = useContext(AuthContext);
+const {signed,loading, isRecoveringPassword} = useContext(AuthContext);
 
 if(loading){
      return(
@@ -27,6 +27,6 @@ if(loading){
 }
 
 return(
-    signed ? <AppRoutes/> : <AuthRoutes/>
+    signed && !isRecoveringPassword? <AppRoutes/> : <AuthRoutes/>
 )
 }

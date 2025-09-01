@@ -1,11 +1,16 @@
-import { View,Text } from "react-native";
+import { useContext } from "react";
+import { View,Text, TouchableOpacity } from "react-native";
+import { AuthContext } from "../../contexts/auth";
 
 export default function Configuration(){
-return(
+
+const {signOut} = useContext(AuthContext);
+
+    return(
     <View>
-        <Text>
-            ola Configuration
-        </Text>
+        <TouchableOpacity onPress={signOut}>
+            <Text>Sair</Text>
+        </TouchableOpacity>
     </View>
 )
 }

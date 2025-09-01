@@ -1,6 +1,5 @@
 import { createContext, useState, useEffect } from "react";
 import { supabase } from "../services/supabase";
-import { useNavigation } from "@react-navigation/native";
 import { Alert } from "react-native";
 
 export const AuthContext = createContext({});
@@ -12,7 +11,7 @@ const [user,setUser] = useState(null);
 const [loadingAuth,setLoadingAuth] = useState(false);
 const [loading,setLoading] = useState(true);
 
-const navigation = useNavigation();
+const [isRecoveringPassword, setIsRecoveringPassword] = useState(false);
 
  useEffect(() => {
         
@@ -44,61 +43,137 @@ async function signIn(email,password) {
     setLoadingAuth(false);
   }
 
-  async function signUp(email,password,confirmPassword,fullName,birthDate,disability) {
-        if (password !== confirmPassword) {
-            Alert.alert("Erro", "As senhas não coincidem!");
-            return;
-        }
-        
-
+   async function signUp(email, password, fullName, birthDate, disability) {
         setLoadingAuth(true);
-
         
-        const { data: authData, error: authError } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
             email: email,
             password: password,
+            options: {
+                data: {
+                    full_name: fullName,
+                    birth_date: birthDate,
+                    disability: disability,
+                }
+            }
         });
 
-        if (authError) {
-            Alert.alert("Erro no cadastro", authError.message);
+        if (error) {
+            Alert.alert("Erro no cadastro", error.message);
+            setLoadingAuth(false);
+            return false; // Retorna falha
+        }
+
+        Alert.alert("Verifique seu e-mail", "Enviamos um código de confirmação para sua caixa de entrada.");
+        setLoadingAuth(false);
+        return true;
+    }
+
+    async function verifyOtp(email, token) {
+        setLoadingAuth(true);
+        const { data, error } = await supabase.auth.verifyOtp({
+            email,
+            token,
+            type: 'signup',
+        });
+
+        if (error) {
+            Alert.alert("Erro na Verificação", error.message || "Código inválido ou expirado.");
             setLoadingAuth(false);
             return;
         }
 
-        if (!authData.user) {
-            Alert.alert("Erro", "Não foi possível criar o usuário. Tente novamente.");
-            setLoadingAuth(false);
-            return;
-        }
+        Alert.alert("Sucesso!", "Seu e-mail foi verificado com sucesso.");
+        setLoadingAuth(false);
+}
 
-        const { error: profileError } = await supabase
-            .from('profiles')
-            .insert({
-                id: authData.user.id,
-                full_name: fullName,
-                birth_date: birthDate,
-                disability: disability,
-            });
+  async function resendSignUpOtp(email) {
+        setLoadingAuth(true);
+        const { data, error } = await supabase.auth.resend({
+            type: 'signup',
+            email: email,
+        });
 
-        if (profileError) {
-            Alert.alert("Erro ao salvar perfil", profileError.message);
+        if (error) {
+            Alert.alert("Erro", error.message || "Não foi possível reenviar o código.");
         } else {
-            Alert.alert("Sucesso!", "Cadastro realizado. Verifique seu e-mail para confirmar a conta.");
+            Alert.alert("Sucesso", "Um novo código de confirmação foi enviado para o seu e-mail.");
         }
 
         setLoadingAuth(false);
-        navigation.goBack();
-  }
+    }
 
   async function signOut() {
-        const { error } = await supabase.auth.signOut();
+    setLoadingAuth(true);
+    
+    const { error } = await supabase.auth.signOut();
+    
+    if (error) {
+        console.log("Erro ao fazer logout:", error.message);
+        Alert.alert("Erro", "Não foi possível fazer logout. Tente novamente.");
+    } else {
+        setUser(null);
+    }
+    
+    setLoadingAuth(false);
+}
+
+  async function sendPasswordResetOtp(email) {
+        setLoadingAuth(true);
+        const { data, error } = await supabase.auth.resetPasswordForEmail(email);
+
         if (error) {
-            console.log("Erro ao fazer logout:", error.message);
+            Alert.alert("Erro", error.message || "Não foi possível enviar o código.");
+            setLoadingAuth(false);
+            return false;
         }
+      
+        setLoadingAuth(false);
+        return true;
+    }
+
+    async function verifyPasswordResetOtp(email, token) {
+        setLoadingAuth(true);
+        const { data, error } = await supabase.auth.verifyOtp({
+            email,
+            token,
+            type: 'recovery'
+        });
+
+        if (error) {
+            Alert.alert("Erro", "Código inválido ou expirado. Tente novamente.");
+            setLoadingAuth(false);
+            return false;
+        }
+        setIsRecoveringPassword(true); 
+        setLoadingAuth(false);
+        return true;
+    }
+
+    async function updateUserPassword(newPassword) {
+        setLoadingAuth(true);
+        const { data, error } = await supabase.auth.updateUser({
+            password: newPassword
+        });
+
+        if (error) {
+            Alert.alert("Erro", "Não foi possível atualizar a senha: " + error.message);
+            setLoadingAuth(false);
+            return false;
+        }
+
+        await supabase.auth.signOut();
+        setIsRecoveringPassword(false);
+        setLoadingAuth(false);
+        return true;
     }
 
     return(
-        <AuthContext.Provider value={{ signed: !!user,user,signIn,signUp,signOut,loading,loadingAuth}}>
+        <AuthContext.Provider value={{ signed: !!user,user,signIn,signUp,signOut,
+        loading,loadingAuth,verifyOtp,resendSignUpOtp,
+        sendPasswordResetOtp,verifyPasswordResetOtp,updateUserPassword,
+        isRecoveringPassword
+        }}>
             {children}
         </AuthContext.Provider>
     )
