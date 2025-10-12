@@ -1,12 +1,14 @@
 import { useContext, useState } from "react";
-import { View,Text, KeyboardAvoidingView, Image, Platform, SafeAreaView, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, ScrollView} from "react-native";
+import { View,Text, KeyboardAvoidingView, Image, Platform, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, ScrollView} from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { styles } from "./styles";
 import acessibilidade from "../../assets/images/acessibilidade.png"
-import titulo from "../../assets/words/titulo.png"
 import TextInputMAI from "../../components/TextInputMAI";
 import ButtonMAI from "../../components/ButtonMAI";
 import { useNavigation } from "@react-navigation/native";
 import { AuthContext } from "../../contexts/auth";
+import TextPrincipal from "../../components/TextPrincipal";
 
 export default function SignIn(){
 const [email,setEmail] = useState("");
@@ -49,11 +51,8 @@ return(
               keyboardShouldPersistTaps="handled"
               >
     <SafeAreaView>
-    <Image style={styles.titulo}
-    source={titulo}
-    height={136}
-    width={269}
-    />
+  <TextPrincipal/>
+  
     <TextInputMAI 
     texto="Email"
     value={email}
@@ -63,9 +62,9 @@ return(
     
     <TextInputMAI
     texto="Senha"
-    secureTextEntry={true}
     value={senha}
     onChangeText={setSenha}
+    password={true}
     />
 
    <TouchableOpacity style={styles.forgot} onPress={() => navegar.navigate("Esqueci minha senha")}>

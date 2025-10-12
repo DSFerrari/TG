@@ -6,11 +6,16 @@ export const styles = StyleSheet.create({
         padding: 10,
         borderColor: theme.COLORS.BLUE1,
         borderWidth:1,
-        borderRadius:40
+        borderRadius:40,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center'
     },
     ButtonText:{
-        alignSelf:'center',
         fontSize:14,
         fontWeight: 'bold'
+    },
+    icon:{
+        marginRight: 8
     }
 })

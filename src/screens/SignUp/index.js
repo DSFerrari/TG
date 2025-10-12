@@ -1,10 +1,11 @@
-import {Text, KeyboardAvoidingView, SafeAreaView,
+import {Text, KeyboardAvoidingView,
 Platform,
 Keyboard,
 TouchableWithoutFeedback,
 ScrollView,
 Alert
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { styles } from "./styles";
 import TextInputMAI from "./../../components/TextInputMAI"
 import { useContext, useState } from "react";
@@ -128,12 +129,14 @@ return(
            texto="Senha"
            value={senha}
             onChangeText={setSenha}
+           password={true}
            />
 
            <TextInputMAI
            texto="Confirme sua senha"
            value={confSenha}
             onChangeText={setConfSenha}
+           password={true}
            />
 
            <ButtonMAI

@@ -1,4 +1,6 @@
-import { View,Text, SafeAreaView,TouchableWithoutFeedback,KeyboardAvoidingView,Keyboard,Platform} from "react-native";
+import { View,Text, TouchableWithoutFeedback,KeyboardAvoidingView,Keyboard,Platform} from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
+
 import TextInputMAI from "../../components/TextInputMAI";
 import ButtonMAI from "../../components/ButtonMAI";
 import { styles } from "./style";

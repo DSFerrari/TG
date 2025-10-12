@@ -1,7 +1,9 @@
 // screens/ConfirmEmail/index.js
 
 import React, { useState, useContext,useEffect } from 'react';
-import { View, Text, SafeAreaView, Alert } from 'react-native';
+import { View, Text, Alert,TouchableWithoutFeedback,Platform,Keyboard,KeyboardAvoidingView,ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { useRoute } from '@react-navigation/native';
 import { AuthContext } from '../../../contexts/auth';
 
@@ -54,6 +56,17 @@ export default function ConfirmEmailScreen() {
     }
 
     return (
+        <TouchableWithoutFeedback
+    onPress={Keyboard.dismiss}
+    >
+    <KeyboardAvoidingView
+     style={styles.container}
+   behavior={Platform.OS === 'ios' ? 'padding': 'height'}
+    >
+        <ScrollView contentContainerStyle={{flexGrow: 1, paddingBottom: 20}}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        >
         <SafeAreaView style={styles.container}>
             <Text style={{marginTop:30, fontSize: 18,color: theme.COLORS.BLUE1}}>
                 Insira o código de 6 dígitos enviado para 
@@ -86,5 +99,8 @@ export default function ConfirmEmailScreen() {
             />
                 )}
         </SafeAreaView>
+        </ScrollView>
+        </KeyboardAvoidingView>
+        </TouchableWithoutFeedback>
     );
 }

@@ -1,6 +1,7 @@
 import { createContext, useState, useEffect } from "react";
 import { supabase } from "../services/supabase";
 import { Alert } from "react-native";
+import { decode } from "base64-arraybuffer";
 
 export const AuthContext = createContext({});
 
@@ -61,7 +62,7 @@ async function signIn(email,password) {
         if (error) {
             Alert.alert("Erro no cadastro", error.message);
             setLoadingAuth(false);
-            return false; // Retorna falha
+            return false;
         }
 
         Alert.alert("Verifique seu e-mail", "Enviamos um código de confirmação para sua caixa de entrada.");
@@ -168,11 +169,171 @@ async function signIn(email,password) {
         return true;
     }
 
+     async function deleteAccount() {
+        setLoadingAuth(true);
+
+        const { error } = await supabase.rpc('delete_user_account');
+
+        if (error) {
+            Alert.alert("Erro ao excluir conta", error.message);
+            setLoadingAuth(false);
+            return false;
+        }
+
+        await signOut(); 
+        
+        Alert.alert("Conta Excluída", "Sua conta foi excluída com sucesso.");
+        return true;
+    }
+
+    async function uploadAvatar(image) {
+    try {
+      setLoadingAuth(true);
+
+      const fileExt = image.uri.split(".").pop();
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, decode(image.base64), {
+          contentType: image.mimeType || "image/jpeg",
+        });
+
+      if (uploadError) throw uploadError;
+
+    
+      const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
+      const publicUrl = data.publicUrl;
+
+      const { data: updatedUser, error } = await supabase.auth.updateUser({
+        data: {
+          ...user.user_metadata,
+          avatar_url: publicUrl,
+        },
+      });
+
+      if (error) throw error;
+
+      setUser(updatedUser.user);
+      Alert.alert("Sucesso", "Sua foto de perfil foi atualizada!");
+
+      return publicUrl;
+    } catch (err) {
+      Alert.alert("Erro no upload", err.message);
+      return null;
+    } finally {
+      setLoadingAuth(false);
+    }
+  }
+
+
+async function updateProfile(fullName, birthDate, disability) {
+  setLoadingAuth(true);
+
+  const normalizeDisability = (input) => {
+    if (!input) return [];
+    const arr = Array.isArray(input) ? input : [input];
+    const pieces = arr.flatMap(item => {
+      if (item == null) return [];
+      return String(item)
+        .split(/[,;\/\|]|(\s+e\s+)/i)
+        .map(p => p && p.trim())
+        .filter(Boolean);
+    });
+    const seen = new Set();
+    const cleaned = [];
+    for (let p of pieces) {
+    
+      const key = p.normalize('NFKD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+      if (!seen.has(key)) {
+        seen.add(key);
+  
+        const titleCase = p
+          .toLowerCase()
+          .split(' ')
+          .filter(Boolean)
+          .map(s => s[0].toUpperCase() + s.slice(1))
+          .join(' ');
+        cleaned.push(titleCase);
+      }
+    }
+    return cleaned;
+  };
+
+  try {
+    const normalized = normalizeDisability(disability);
+    
+    const { data: cleared, error: clearError } = await supabase.auth.updateUser({
+      data: {
+        disability: [],
+      },
+    });
+
+const got = await supabase.auth.getUser();
+console.log('AFTER CLEAR -> auth.getUser user_metadata:', JSON.stringify(got.data?.user?.user_metadata, null, 2), 'error:', got.error);
+    if (clearError) {
+      console.error('[updateProfile] erro ao limpar disability:', clearError);
+  
+      Alert.alert('Erro', 'Não foi possível limpar deficiências. Tente novamente.');
+      setLoadingAuth(false);
+      return false;
+    }
+
+
+    const finalDisability = Array.isArray(normalized) && normalized.length > 0 ? normalized : [];
+
+    const payload = {
+      full_name: String(fullName || '').trim(),
+      birth_date: String(birthDate || '').trim(),
+      disability: finalDisability,
+    };
+
+    const { data: updatedUser, error } = await supabase.auth.updateUser({
+      data: payload,
+    });
+
+    if (error) {
+      console.error('[updateProfile] erro ao gravar payload final:', error);
+      Alert.alert('Erro', error.message || 'Erro ao atualizar perfil');
+      setLoadingAuth(false);
+      return false;
+    }
+
+    console.log('[updateProfile] resposta final:', updatedUser);
+
+    if (updatedUser && updatedUser.user) {
+      setUser(updatedUser.user);
+    } else {
+      const fetched = await supabase.auth.getUser();
+      if (!fetched.error && fetched.data?.user) setUser(fetched.data.user);
+    }
+
+    setLoadingAuth(false);
+    return true;
+  } catch (err) {
+    console.error('[updateProfile] catch:', err);
+    Alert.alert('Erro', err?.message || 'Erro desconhecido ao atualizar perfil');
+    setLoadingAuth(false);
+    return false;
+  }
+}
+
+
+  async function getProfile() {
+    const { data, error } = await supabase.auth.getUser();
+    if (!error) {
+      setUser(data.user);
+      return data.user;
+    }
+    return null;
+  }
+
     return(
         <AuthContext.Provider value={{ signed: !!user,user,signIn,signUp,signOut,
         loading,loadingAuth,verifyOtp,resendSignUpOtp,
         sendPasswordResetOtp,verifyPasswordResetOtp,updateUserPassword,
-        isRecoveringPassword
+        isRecoveringPassword,deleteAccount,updateProfile,uploadAvatar,getProfile
         }}>
             {children}
         </AuthContext.Provider>

@@ -4,8 +4,10 @@ import Configuration from "../screens/Configuration";
 import Favorites from "../screens/Favorites";
 import Profiles from "../screens/Profiles";
 import Home from "../screens/Home"
+import ProfileStack from "./profile.routes";
 
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import { MaterialCommunityIcons } from '@expo/vector-icons'
 
 import theme from "../theme";
 
@@ -29,8 +31,13 @@ export default function authTab(){
         component={Home}
         options={{
             tabBarIcon: () => (
-<Icon name="map-marker-outline" color={theme.COLORS.WHITE3} size={24}/>
+                <MaterialCommunityIcons name="map-marker-outline" color = {theme.COLORS.WHITE3} size={24} />
             ),
+        headerTitle:'Inicio - Estabelecimentos',
+        headerTintColor: theme.COLORS.WHITE3,
+            headerStyle: {
+                backgroundColor: theme.COLORS.BLUE1
+            }
         }}
         />
         <authBottomTab.Screen
@@ -38,28 +45,41 @@ export default function authTab(){
         component={Favorites}
         options={{
             tabBarIcon: () => (
-<Icon name="heart-outline" color={theme.COLORS.WHITE3} size={24}/>
+<MaterialCommunityIcons name="heart-outline" color={theme.COLORS.WHITE3} size={24}/>
             ),
+            headerTitle:'Favoritos',
+            headerTintColor: theme.COLORS.WHITE3,
+            headerStyle: {
+                backgroundColor: theme.COLORS.BLUE1
+            }
         }}
         />
         <authBottomTab.Screen
         name="Perfil"
-        component={Profiles}
+        component={ProfileStack}
         options={{
-            tabBarIcon: () => (
-<Icon name="account-outline" color={theme.COLORS.WHITE3} size={24}/>
-            ),
-        }}
+            headerShown:false,
+                tabBarIcon: () => (
+    <MaterialCommunityIcons name="account-outline" color={theme.COLORS.WHITE3} size={24}/>
+                ),
+             
+            }}
         />
         <authBottomTab.Screen
-        name="Configuracao"
+        name="Configurações"
         component={Configuration}
         options={{
             tabBarIcon: () => (
-<Icon name="cog-outline" color={theme.COLORS.WHITE3} size={24}/>
+<MaterialCommunityIcons name="cog-outline" color={theme.COLORS.WHITE3} size={24}/>
             ),
+            headerTitle:'Configurações',
+            headerTintColor: theme.COLORS.WHITE3,
+            headerStyle: {
+                backgroundColor: theme.COLORS.BLUE1
+            }
         }}
         />
+
     </authBottomTab.Navigator>
     )
 }

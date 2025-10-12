@@ -24,6 +24,15 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+      "expo-image-picker",
+      {
+        "photosPermission": "A aplicação acessa suas fotos para permitir que você escolha uma imagem de perfil.",
+          "cameraPermission": "A aplicação acessa sua câmera para permitir que você tire uma foto de perfil."
+      }
+    ]
+  ]
   }
 }

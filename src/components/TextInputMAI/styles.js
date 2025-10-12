@@ -25,5 +25,18 @@ export const styles = StyleSheet.create({
         },
         viewtoinput:{
             marginTop: 32,
-        }
+        },
+        inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    position: 'relative',
+},
+inputWithIcon: {
+    paddingRight: 50,
+},
+eyeIcon: {
+    position: 'absolute',
+    right: 15,
+    padding: 5,
+},
 })

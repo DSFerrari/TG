@@ -1,19 +1,42 @@
+import { useState,useEffect } from "react";
 import { styles } from "./styles";
-import { View,TextInput,Text } from "react-native";
+import { View,TextInput,Text, TouchableOpacity } from "react-native";
 import theme from "../../theme";
+import { Ionicons } from '@expo/vector-icons';
 
-export default function TextInputMAI({texto, ...props}){
+export default function TextInputMAI({texto,password, ...props}){
+  const [showPassword, setShowPassword] = useState(false);
+
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
+    };
+
     return(
         <View style={styles.viewtoinput}>
               <Text style={styles.textwithinput}>{texto}
                 <Text style={{color:'red'}}> *</Text>
               </Text>
-            <TextInput
-                 style={styles.input}
-                  placeholder="Digite aqui"
-                  placeholderTextColor={theme.COLORS.BLACK1}
-                {...props}
-            />
+          <View style={styles.inputContainer}>
+                <TextInput
+                    style={[styles.input, password && styles.inputWithIcon]}
+                    placeholder="Digite aqui"
+                    placeholderTextColor={theme.COLORS.BLACK1}
+                    secureTextEntry={password && !showPassword}
+                    {...props}
+                />
+                {password && (
+                    <TouchableOpacity 
+                        style={styles.eyeIcon}
+                        onPress={togglePasswordVisibility}
+                    >
+                        <Ionicons 
+                            name={showPassword ? "eye-off" : "eye"} 
+                            size={24} 
+                            color={theme.COLORS.BLACK1}
+                        />
+                    </TouchableOpacity>
+                )}
+            </View>
             </View>
     )
 }
