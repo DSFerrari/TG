@@ -271,10 +271,7 @@ async function updateProfile(fullName, birthDate, disability) {
     });
 
 const got = await supabase.auth.getUser();
-console.log('AFTER CLEAR -> auth.getUser user_metadata:', JSON.stringify(got.data?.user?.user_metadata, null, 2), 'error:', got.error);
     if (clearError) {
-      console.error('[updateProfile] erro ao limpar disability:', clearError);
-  
       Alert.alert('Erro', 'Não foi possível limpar deficiências. Tente novamente.');
       setLoadingAuth(false);
       return false;
@@ -294,13 +291,11 @@ console.log('AFTER CLEAR -> auth.getUser user_metadata:', JSON.stringify(got.dat
     });
 
     if (error) {
-      console.error('[updateProfile] erro ao gravar payload final:', error);
       Alert.alert('Erro', error.message || 'Erro ao atualizar perfil');
       setLoadingAuth(false);
       return false;
     }
 
-    console.log('[updateProfile] resposta final:', updatedUser);
 
     if (updatedUser && updatedUser.user) {
       setUser(updatedUser.user);
@@ -312,7 +307,6 @@ console.log('AFTER CLEAR -> auth.getUser user_metadata:', JSON.stringify(got.dat
     setLoadingAuth(false);
     return true;
   } catch (err) {
-    console.error('[updateProfile] catch:', err);
     Alert.alert('Erro', err?.message || 'Erro desconhecido ao atualizar perfil');
     setLoadingAuth(false);
     return false;

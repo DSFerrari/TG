@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import {
   StyleSheet,
   ScrollView,
@@ -15,10 +15,47 @@ export default function Informacoes({ navigation }) {
   const { user, updateProfile, loadingAuth } = useContext(AuthContext);
 
   const [nome, setNome] = useState(user?.user_metadata?.full_name || "");
-  const [dataNascimento, setDataNascimento] = useState(
-    user?.user_metadata?.birth_date || ""
-  );
+  const [dataNascimento, setDataNascimento] = useState("")
   const [deficiencia, setDeficiencia] = useState([]);
+
+   const formatarDataInicial = (dateStr) => {
+    if (!dateStr) 
+    return "";
+   if (dateStr.includes("/")) return dateStr;
+    const parts = dateStr.split("-");
+    if (parts.length !== 3) return dateStr;
+    const [ano, mes, dia] = parts;
+    return `${dia.padStart(2, "0")}/${mes.padStart(2, "0")}/${ano}`;
+  };
+
+  useEffect(() => {
+    const bd = user?.user_metadata?.birth_date;
+    if (bd) {
+      setDataNascimento(formatarDataInicial(bd));
+    }
+}, [user?.user_metadata?.birth_date]);
+
+ useEffect(() => {
+    const raw =
+      user?.user_metadata?.disability
+
+    if (!raw) {
+     setDeficiencia([]);
+      return;
+    }
+
+    if (Array.isArray(raw)) {
+      setDeficiencia(raw);
+    } else if (typeof raw === "string") {
+      const arr = raw
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      setDeficiencia(arr);
+    } else {
+      setDeficiencia([]);
+    }
+  }, [user?.user_metadata]);
 
   const formatarData = (text) => {
     const numeros = text.replace(/\D/g, "");
