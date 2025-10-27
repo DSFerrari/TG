@@ -7,16 +7,16 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: theme.COLORS.WHITE2,
     borderRadius: 25,
-    height: 40,
-    width: "90%",
+    height: 50,
     alignSelf: "center",
   },
   icon: {
-    marginRight: 6,
+    marginLeft: 10,
+    marginRight: 20,
   },
   input: {
     flex: 1,
-    color: "#3C3C3C",
+    color: theme.COLORS.BLACK1,
     fontSize: 16,
   },
 });

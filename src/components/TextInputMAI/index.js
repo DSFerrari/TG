@@ -14,7 +14,7 @@ export default function TextInputMAI({texto,password, ...props}){
     return(
         <View style={styles.viewtoinput}>
               <Text style={styles.textwithinput}>{texto}
-                <Text style={{color:'red'}}> *</Text>
+                <Text style={{color: theme.COLORS.RED1}}> *</Text>
               </Text>
           <View style={styles.inputContainer}>
                 <TextInput

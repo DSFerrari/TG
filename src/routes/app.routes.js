@@ -2,14 +2,12 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 
 import Configuration from "../screens/Configuration";
 import Favorites from "../screens/Favorites";
-import Profiles from "../screens/Profiles";
-import Home from "../screens/Home"
 import ProfileStack from "./profile.routes";
 
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 
 import theme from "../theme";
+import HomeStack from "./home.routes";
 
 const authBottomTab = createBottomTabNavigator();
 export default function authTab(){
@@ -28,16 +26,12 @@ export default function authTab(){
     >
         <authBottomTab.Screen
         name="Inicio"
-        component={Home}
+        component={HomeStack}
         options={{
             tabBarIcon: () => (
                 <MaterialCommunityIcons name="map-marker-outline" color = {theme.COLORS.WHITE3} size={24} />
             ),
-        headerTitle:'Inicio - Estabelecimentos',
-        headerTintColor: theme.COLORS.WHITE3,
-            headerStyle: {
-                backgroundColor: theme.COLORS.BLUE1
-            }
+        headerShown: false,
         }}
         />
         <authBottomTab.Screen

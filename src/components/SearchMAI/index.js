@@ -1,6 +1,7 @@
 import { View, Text, TextInput, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { styles } from "./styles";
+import theme from "../../theme";
 
 export default function SearchMAI({ placeholder = "Pesquisar", value, onChangeText }) {
   return (
@@ -9,12 +10,10 @@ export default function SearchMAI({ placeholder = "Pesquisar", value, onChangeTe
       <TextInput
         style={styles.input}
         placeholder={placeholder}
-        placeholderTextColor="#4B4B4B"
+        placeholderTextColor={theme.COLORS.BLACK1}
         value={value}
         onChangeText={onChangeText}
       />
     </View>
   );
 }
-
-
