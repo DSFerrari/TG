@@ -16,7 +16,7 @@ export default function Home(){
 
 const [search, setSearch] = useState("");
 const navegar = useNavigation();
-const { getEstablishments, loadingAuth } = useContext(AppContext);
+const { getEstablishments, loadingAuth,favoriteIds,toggleFavorite} = useContext(AppContext);
 const [estabelecimentos, setEstabelecimentos] = useState([]);
 const [filtrados, setFiltrados] = useState([]);
 
@@ -75,15 +75,17 @@ return(
        behavior={Platform.OS === 'ios' ? 'padding': 'height'}
        >
         <SafeAreaView>
+          <View style={{marginTop:-20}}>
             <SearchMAI
             value={search}
             onChangeText={setSearch}
             />
+            </View>
             <ButtonMAI
             name="Filtros"
             icon={"menu"}
             />
-            <View style={{marginTop: -10}}>
+            <View style={{marginTop: -10,marginBottom:20}}>
             <ButtonMAI
             name="Novo Estabelecimento"
             icon={"add"}
@@ -103,7 +105,9 @@ return(
             categoria={item.categoria || "Sem categoria"}
             imagem={{ uri: item.url_foto }}
             avaliacao={item.avaliacao || 0}
-            //onPress={() => navegar.navigate("Detalhes", { estabelecimento: item })}
+            onPress={() => navegar.navigate("Detalhes", { estabelecimento: item })}
+            isFavorite={favoriteIds.has(item.id)}
+            onToggleFavorite={() => toggleFavorite(item.id)}
           />
         )}
         ListEmptyComponent={() => (
