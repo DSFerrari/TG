@@ -4,7 +4,7 @@ import { View,TextInput,Text, TouchableOpacity } from "react-native";
 import theme from "../../theme";
 import { Ionicons } from '@expo/vector-icons';
 
-export default function TextInputMAI({texto,password, ...props}){
+export default function TextInputMAI({texto,password,style, ...props}){
   const [showPassword, setShowPassword] = useState(false);
 
     const togglePasswordVisibility = () => {
@@ -18,7 +18,7 @@ export default function TextInputMAI({texto,password, ...props}){
               </Text>
           <View style={styles.inputContainer}>
                 <TextInput
-                    style={[styles.input, password && styles.inputWithIcon]}
+                    style={[styles.input, password && styles.inputWithIcon,style]}
                     placeholder="Digite aqui"
                     placeholderTextColor={theme.COLORS.BLACK1}
                     secureTextEntry={password && !showPassword}

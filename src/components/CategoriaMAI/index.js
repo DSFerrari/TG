@@ -1,37 +1,48 @@
 import React from 'react';
-import { StyleSheet, View,Text } from 'react-native';
+import { StyleSheet, View, Text } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 import { Feather } from '@expo/vector-icons';
 import theme from '../../theme';
 
-export default function CategoriaMAI({ items, value, onValueChange, placeholder = "Selecione" }) {
-  
-
+export default function CategoriaMAI({
+  items,
+  value,
+  onValueChange,
+  placeholder = 'Selecione',
+}) {
   const placeholderConfig = {
     label: placeholder,
     value: null,
     color: theme.COLORS.BLACK1,
   };
 
-  return (
-    <View style={styles.container}>
+  // 🔒 Proteção total contra crash
+  try {
+    const validItems = items || [];
+    const validValue = validItems.some(i => i.value === value) ? value : null;
 
-        <Text style={styles.textCategoria}>Categoria
-            <Text style={{color: theme.COLORS.RED1}}> *</Text>
+    return (
+      <View style={styles.container}>
+        <Text style={styles.textCategoria}>
+          Categoria
+          <Text style={{ color: theme.COLORS.RED1 }}> *</Text>
         </Text>
-      <RNPickerSelect
-        onValueChange={onValueChange}
-        items={items}
-        value={value}
-        placeholder={placeholderConfig}
-        style={pickerSelectStyles}
-        useNativeAndroidPickerStyle={false}
-        Icon={() => {
-          return <Feather name="chevron-down" size={24} color="gray" style={styles.icon} />;
-        }}
-      />
-    </View>
-  );
+
+        <RNPickerSelect
+          onValueChange={onValueChange}
+          items={validItems}
+          value={validValue}
+          placeholder={placeholderConfig}
+          style={pickerSelectStyles}
+          useNativeAndroidPickerStyle={false}
+          Icon={() => <Feather name="chevron-down" size={24} color="gray" />}
+        />
+      </View>
+    );
+  } catch (error) {
+    console.log('Erro no RNPickerSelect:', error);
+    return null;
+  }
 }
 
 const styles = StyleSheet.create({
@@ -45,11 +56,7 @@ const styles = StyleSheet.create({
     marginBottom: -6,
     marginTop: 20,
   },
-  icon: {
-    top: 12,
-    right: 15,
-  },
-  textCategoria:{
+  textCategoria: {
     fontSize: 14,
     fontWeight: '400',
     position: 'absolute',
@@ -59,9 +66,8 @@ const styles = StyleSheet.create({
     zIndex: 1,
     backgroundColor: theme.COLORS.WHITE3,
     paddingHorizontal: 5,
-  }
+  },
 });
-
 
 const pickerSelectStyles = StyleSheet.create({
   inputIOS: {
@@ -75,5 +81,9 @@ const pickerSelectStyles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 12,
     color: 'black',
+  },
+  iconContainer: {
+    top: 18,
+    right: 15,
   },
 });

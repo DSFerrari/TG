@@ -3,6 +3,8 @@ import Home from '../screens/Home';
 import CadastrarEstabelecimento from '../screens/Home/CadastrarEstabelecimento';
 import theme from '../theme';
 import Detalhes from '../screens/Home/Detalhes';
+import Avaliacoes from '../screens/Home/Avaliacoes';
+import EscreverAvaliacao from '../screens/Home/Avaliacoes/EscreverAvaliacao';
 
 const Stack = createStackNavigator();
 
@@ -39,7 +41,16 @@ export default function HomeStack() {
                 }
       })}
       />
-
+  <Stack.Screen
+  name="Avaliacoes"
+  component={Avaliacoes}
+  options={{ title: 'Avaliações' }}
+/>
+<Stack.Screen
+  name="EscreverAvaliacao"
+  component={EscreverAvaliacao}
+  options={{ title: 'Escrever avaliação', headerBackTitle: ''}}
+/>
     </Stack.Navigator>
   );
 }

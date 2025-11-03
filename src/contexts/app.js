@@ -9,11 +9,9 @@ export default function AppProvider({ children }) {
   const [loadingAuth, setLoadingAuth] = useState(false);
   const [user, setUser] = useState(null);
 
-  // NOVO: Estados para Favoritos
   const [loadingFavorites, setLoadingFavorites] = useState(false);
   const [favoriteIds, setFavoriteIds] = useState(new Set());
 
-  // NOVO: Função para buscar os IDs dos favoritos do usuário
   async function fetchUserFavorites(userId) {
     if (!userId) return;
 
@@ -21,13 +19,12 @@ export default function AppProvider({ children }) {
       setLoadingFavorites(true);
       const { data, error } = await supabase
         .from("favoritos")
-        .select("id_estabelecimento") // <-- MUDANÇA AQUI
+        .select("id_estabelecimento")
         .eq("id_usuario", userId);
 
       if (error) throw error;
 
-      // Transforma o array de objetos em um Set de IDs
-      const idSet = new Set(data.map((fav) => fav.id_estabelecimento)); // <-- MUDANÇA AQUI
+      const idSet = new Set(data.map((fav) => fav.id_estabelecimento));
       setFavoriteIds(idSet);
     } catch (err) {
       Alert.alert("Erro ao carregar seus favoritos", err.message);
@@ -60,7 +57,6 @@ export default function AppProvider({ children }) {
     };
   }, []); 
 
-  // NOVO: Função para adicionar/remover um favorito (clique no coração)
   async function toggleFavorite(establishmentId) {
     if (!user) {
       Alert.alert("Atenção", "Você precisa estar logado para favoritar.");
@@ -72,12 +68,11 @@ export default function AppProvider({ children }) {
 
     try {
       if (isCurrentlyFavorite) {
-        // --- REMOVER (DELETE) ---
         const { error } = await supabase
           .from("favoritos")
           .delete()
           .eq("id_usuario", userId)
-          .eq("id_estabelecimento", establishmentId); // <-- MUDANÇA AQUI
+          .eq("id_estabelecimento", establishmentId);
 
         if (error) throw error;
 
@@ -87,10 +82,9 @@ export default function AppProvider({ children }) {
           return newSet;
         });
       } else {
-        // --- ADICIONAR (INSERT) ---
         const { error } = await supabase
           .from("favoritos")
-          .insert({ id_usuario: userId, id_estabelecimento: establishmentId }); // <-- MUDANÇA AQUI
+          .insert({ id_usuario: userId, id_estabelecimento: establishmentId });
 
         if (error) throw error;
 
@@ -105,7 +99,6 @@ export default function AppProvider({ children }) {
     }
   }
 
-  // NOVO: Função para carregar a tela "Favoritos" (com JOIN)
   async function getFavoriteEstablishments() {
     if (!user) return []; 
 
@@ -168,48 +161,47 @@ export default function AppProvider({ children }) {
   }
 
   async function createEstablishment(establishmentData, navigation) {
-    try {
-      setLoadingAuth(true);
+  try {
+    setLoadingAuth(true);
 
-      if (!user) {
-        throw new Error("Usuário não autenticado.");
-      }
-
-      const dataToInsert = {
-        ...establishmentData,
-        id_usuario_criador: user.id,
-      };
-
-      const { data, error } = await supabase
-        .from("estabelecimentos")
-        .insert([dataToInsert])
-        .select();
-
-      if (error) {
-        throw error;
-      }
-
-      if (data && data.length > 0) {
-        Alert.alert("Sucesso!", "Novo estabelecimento cadastrado.");
-        navigation.goBack();
-        return data[0];
-      }
-
-      return null;
-    } catch (err) {
-      Alert.alert("Erro ao salvar", err.message);
-      return null;
-    } finally {
-      setLoadingAuth(false);
+    if (!user) {
+      throw new Error("Usuário não autenticado.");
     }
+
+    const dataToInsert = {
+      ...establishmentData,
+      id_usuario_criador: user.id,
+    };
+
+    const { data, error } = await supabase
+      .from("estabelecimentos")
+      .insert([dataToInsert])
+      .select();
+
+    if (error) throw error;
+
+    if (data && data.length > 0) {
+      Alert.alert("Sucesso!", "Novo estabelecimento cadastrado.");
+      navigation.goBack();
+      return data[0];
+    }
+
+    return null;
+  } catch (err) {
+    Alert.alert("Erro ao salvar", err.message);
+    return null;
+  } finally {
+    setLoadingAuth(false);
   }
+}
+
 
   async function getEstablishments() {
     try {
       setLoadingAuth(true);
 
       const { data, error } = await supabase
-        .from("estabelecimentos")
+        .from("estabelecimentos_view")
         .select("*")
         .order("id", { ascending: false });
 
@@ -224,6 +216,51 @@ export default function AppProvider({ children }) {
     }
   }
 
+  async function getAvaliacoesByEstabelecimento(id_estabelecimento) {
+    try {
+      const { data, error } = await supabase
+        .from('avaliacoes')
+        .select('*')
+        .eq('id_estabelecimento', id_estabelecimento)
+        .order('data_criacao', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    } catch (err) {
+      Alert.alert('Erro', 'Não foi possível carregar as avaliações.');
+      return [];
+    }
+  }
+
+  async function createAvaliacao({ id_estabelecimento, nota, titulo, comentario, eh_anonimo }) {
+    if (!user) {
+      Alert.alert('Atenção', 'Você precisa estar logado para avaliar.');
+      return false;
+    }
+
+    try {
+      const { error } = await supabase.from('avaliacoes').insert([
+        {
+          id_estabelecimento,
+          id_usuario: user.id,
+          nota,
+          titulo,
+          comentario,
+          eh_anonimo,
+        },
+      ]);
+
+      if (error) throw error;
+
+      await supabase.rpc('atualizar_media_estabelecimento', { id_estab: id_estabelecimento });
+
+      Alert.alert('Sucesso!', 'Avaliação publicada com sucesso!');
+      return true;
+    } catch (err) {
+      Alert.alert('Erro', err.message || 'Não foi possível publicar a avaliação.');
+      return false;
+    }
+  }
   return (
     <AppContext.Provider
       value={{
@@ -235,7 +272,9 @@ export default function AppProvider({ children }) {
         loadingFavorites, 
         favoriteIds, 
         toggleFavorite, 
-        getFavoriteEstablishments, 
+        getFavoriteEstablishments,
+        getAvaliacoesByEstabelecimento,
+        createAvaliacao,
       }}
     >
       {children}
