@@ -25,7 +25,7 @@ export default function AuthTab() {
     >
  
       <Tab.Screen
-        name="Inicio"
+        name="Início"
         component={HomeStack}
         options={{
           tabBarIcon: () => (
@@ -47,7 +47,7 @@ export default function AuthTab() {
     
               navigation.reset({
                 index: 0,
-                routes: [{ name: "Inicio"}],
+                routes: [{ name: "Início"}],
               });
             }
           },

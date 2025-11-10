@@ -1,18 +1,20 @@
-import { NavigationContainer } from '@react-navigation/native';
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
-import AuthProvider from './src/contexts/auth';
-import Routes from './src/routes';
-import AppProvider from './src/contexts/app';
+import { NavigationContainer } from "@react-navigation/native";
+import { StatusBar } from "expo-status-bar";
+import { StyleSheet, View } from "react-native";
+
+import AuthProvider from "./src/contexts/auth";
+import AppProvider from "./src/contexts/app";
+import Routes from "./src/routes";
 
 export default function App() {
   return (
-<NavigationContainer>
-<AuthProvider>
-  <AppProvider>
-  <Routes/>
-</AppProvider>
-</AuthProvider>
-</NavigationContainer>
+    <AuthProvider>
+      <AppProvider>
+        <NavigationContainer>
+          <StatusBar style="light" backgroundColor="#000" />
+          <Routes />
+        </NavigationContainer>
+      </AppProvider>
+    </AuthProvider>
   );
 }

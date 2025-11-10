@@ -12,45 +12,45 @@ export default function HomeStack() {
   return (
     <Stack.Navigator>
       <Stack.Screen name="Home" component={Home}
-      options={{
-           headerTitle:'Inicio - Estabelecimentos',
-                headerTintColor: theme.COLORS.WHITE3,
-                headerStyle: {
-                    backgroundColor: theme.COLORS.BLUE1
-                }
-      }}
+        options={{
+          headerTitle: 'Início - Estabelecimentos',
+          headerTintColor: theme.COLORS.WHITE3,
+          headerStyle: {
+            backgroundColor: theme.COLORS.BLUE1
+          }
+        }}
       />
       <Stack.Screen name="Cadastrar Estabelecimento" component={CadastrarEstabelecimento}
-      options={{
+        options={{
           headerBackTitle: '',
-           headerTitle:'Cadastrar Estabelecimento',
-                headerTintColor: theme.COLORS.WHITE3,
-                headerStyle: {
-                    backgroundColor: theme.COLORS.BLUE1
-                }
-      }}
+          headerTitle: 'Cadastrar Estabelecimento',
+          headerTintColor: theme.COLORS.WHITE3,
+          headerStyle: {
+            backgroundColor: theme.COLORS.BLUE1
+          }
+        }}
       />
 
-       <Stack.Screen name="Detalhes" component={Detalhes}
-      options={({ route }) => ({
+      <Stack.Screen name="Detalhes" component={Detalhes}
+        options={({ route }) => ({
           headerBackTitle: '',
-           headerTitle: route.params.estabelecimento.nome || 'Detalhes do Estabelecimento',
-                headerTintColor: theme.COLORS.WHITE3,
-                headerStyle: {
-                    backgroundColor: theme.COLORS.BLUE1
-                }
-      })}
+          headerTitle: route.params.estabelecimento.nome || 'Detalhes do Estabelecimento',
+          headerTintColor: theme.COLORS.WHITE3,
+          headerStyle: {
+            backgroundColor: theme.COLORS.BLUE1
+          }
+        })}
       />
-  <Stack.Screen
-  name="Avaliacoes"
-  component={Avaliacoes}
-  options={{ title: 'Avaliações' }}
-/>
-<Stack.Screen
-  name="EscreverAvaliacao"
-  component={EscreverAvaliacao}
-  options={{ title: 'Escrever avaliação', headerBackTitle: ''}}
-/>
+      <Stack.Screen
+        name="Avaliacoes"
+        component={Avaliacoes}
+        options={{ title: 'Avaliações' }}
+      />
+      <Stack.Screen
+        name="EscreverAvaliacao"
+        component={EscreverAvaliacao}
+        options={{ title: 'Escrever avaliação', headerBackTitle: '' }}
+      />
     </Stack.Navigator>
   );
 }

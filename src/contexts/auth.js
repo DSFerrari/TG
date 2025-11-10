@@ -113,6 +113,7 @@ async function signIn(email,password) {
         console.log("Erro ao fazer logout:", error.message);
         Alert.alert("Erro", "Não foi possível fazer logout. Tente novamente.");
     } else {
+      Alert.alert("Sucesso", "Você saiu com sucesso!");
         setUser(null);
     }
     

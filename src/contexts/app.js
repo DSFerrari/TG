@@ -9,8 +9,43 @@ export default function AppProvider({ children }) {
   const [loadingAuth, setLoadingAuth] = useState(false);
   const [user, setUser] = useState(null);
 
+  const [profile, setProfile] = useState(null);
+  const [userIsAdmin, setUserIsAdmin] = useState(false);
+
   const [loadingFavorites, setLoadingFavorites] = useState(false);
   const [favoriteIds, setFavoriteIds] = useState(new Set());
+
+  async function fetchProfile(userId) {
+    if (!userId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single();
+
+      if (error && error.code !== "PGRST116") throw error;
+
+      if (!data) {
+        const { data: newProfile, error: insertError } = await supabase
+          .from("profiles")
+          .insert([{ id: userId }])
+          .select()
+          .maybeSingle();
+
+        if (insertError) throw insertError;
+        setProfile(newProfile);
+        setUserIsAdmin(false);
+      } else {
+        setProfile(data);
+        setUserIsAdmin(data.is_admin === true);
+      }
+    } catch (err) {
+      console.error("Erro ao buscar perfil:", err);
+    }
+  }
+
 
   async function fetchUserFavorites(userId) {
     if (!userId) return;
@@ -38,6 +73,7 @@ export default function AppProvider({ children }) {
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchUserFavorites(session.user.id);
+        fetchProfile(session.user.id);
       }
     });
 
@@ -46,8 +82,10 @@ export default function AppProvider({ children }) {
         setUser(session?.user ?? null);
         if (session?.user) {
           fetchUserFavorites(session.user.id);
+          fetchProfile(session.user.id);
         } else {
           setFavoriteIds(new Set());
+          setUserIsAdmin(false);
         }
       }
     );
@@ -100,29 +138,39 @@ export default function AppProvider({ children }) {
   }
 
   async function getFavoriteEstablishments() {
-    if (!user) return []; 
+  if (!user) return [];
 
-    try {
-      setLoadingFavorites(true);
+  try {
+    setLoadingFavorites(true);
 
-      const { data, error } = await supabase
-        .from("favoritos")
-        .select("estabelecimentos(*)")
-        .eq("id_usuario", user.id)
-        .order("id", { foreignTable: "estabelecimentos", ascending: false }); 
+    const { data: favRows, error: favErr } = await supabase
+      .from("favoritos")
+      .select("id_estabelecimento")
+      .eq("id_usuario", user.id);
 
-      if (error) throw error;
+    if (favErr) throw favErr;
+    if (!favRows || favRows.length === 0) return [];
 
-      return data.map((item) => item.estabelecimentos);
-    } catch (err) {
-      Alert.alert("Erro ao carregar favoritos", err.message);
-      return [];
-    } finally {
-      setLoadingFavorites(false);
-    }
+    const ids = favRows.map((r) => r.id_estabelecimento);
+
+    const { data: estabs, error: estErr } = await supabase
+      .from("estabelecimentos_view")
+      .select("*")
+      .in("id", ids);
+
+    if (estErr) throw estErr;
+
+    return estabs || [];
+  } catch (err) {
+    Alert.alert("Erro ao carregar favoritos", err.message);
+    return [];
+  } finally {
+    setLoadingFavorites(false);
   }
+}
 
-  async function uploadEstablishmentImage(image, establishmentId) {
+
+  async function uploadEstablishmentImage(image, establishmentId, navigation) {
     try {
       setLoadingAuth(true);
 
@@ -151,6 +199,8 @@ export default function AppProvider({ children }) {
       if (error) throw error;
 
       Alert.alert("Sucesso", "Foto do estabelecimento atualizada!");
+       await new Promise(resolve => setTimeout(resolve, 1000));
+      navigation.goBack();
       return publicUrl;
     } catch (err) {
       Alert.alert("Erro no upload", err.message);
@@ -160,7 +210,7 @@ export default function AppProvider({ children }) {
     }
   }
 
-  async function createEstablishment(establishmentData, navigation) {
+  async function createEstablishment(establishmentData) {
   try {
     setLoadingAuth(true);
 
@@ -182,7 +232,6 @@ export default function AppProvider({ children }) {
 
     if (data && data.length > 0) {
       Alert.alert("Sucesso!", "Novo estabelecimento cadastrado.");
-      navigation.goBack();
       return data[0];
     }
 
@@ -195,26 +244,26 @@ export default function AppProvider({ children }) {
   }
 }
 
+async function getEstablishments() {
+  try {
+    setLoadingAuth(true);
 
-  async function getEstablishments() {
-    try {
-      setLoadingAuth(true);
+    const { data, error } = await supabase
+      .from("estabelecimentos_view")
+      .select("*")
+      .eq("status", "aprovado")
+      .order("id", { ascending: false });
 
-      const { data, error } = await supabase
-        .from("estabelecimentos_view")
-        .select("*")
-        .order("id", { ascending: false });
+    if (error) throw error;
 
-      if (error) throw error;
-
-      return data;
-    } catch (err) {
-      Alert.alert("Erro ao carregar", err.message);
-      return [];
-    } finally {
-      setLoadingAuth(false);
-    }
+    return data;
+  } catch (err) {
+    Alert.alert("Erro ao carregar", err.message);
+    return [];
+  } finally {
+    setLoadingAuth(false);
   }
+}
 
   async function getAvaliacoesByEstabelecimento(id_estabelecimento) {
     try {
@@ -261,6 +310,55 @@ export default function AppProvider({ children }) {
       return false;
     }
   }
+
+  async function makeUserAdmin(userId, isAdmin) {
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ is_admin: isAdmin })
+        .eq("id", userId);
+
+      if (error) throw error;
+
+      Alert.alert(
+        "Sucesso",
+        isAdmin
+          ? "Usuário agora é administrador!"
+          : "Usuário deixou de ser administrador."
+      );
+    } catch (err) {
+      Alert.alert("Erro", "Não foi possível atualizar o status do usuário.");
+    }
+  }
+
+  async function banUser(userId) {
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ status: "banido" })
+        .eq("id", userId);
+
+      if (error) throw error;
+      Alert.alert("Sucesso", "Usuário banido com sucesso!");
+    } catch (err) {
+      Alert.alert("Erro", "Falha ao banir o usuário.");
+    }
+  }
+
+  async function unbanUser(userId) {
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ status: "ativo" })
+        .eq("id", userId);
+
+      if (error) throw error;
+      Alert.alert("Sucesso", "Usuário reativado com sucesso!");
+    } catch (err) {
+      Alert.alert("Erro", "Falha ao reativar o usuário.");
+    }
+  }
+
   return (
     <AppContext.Provider
       value={{
@@ -275,6 +373,10 @@ export default function AppProvider({ children }) {
         getFavoriteEstablishments,
         getAvaliacoesByEstabelecimento,
         createAvaliacao,
+        userIsAdmin,
+        makeUserAdmin,
+        banUser,
+        unbanUser,
       }}
     >
       {children}

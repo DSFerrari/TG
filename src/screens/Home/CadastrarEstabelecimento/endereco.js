@@ -8,7 +8,7 @@ import {
 import { useState, useEffect } from "react";
 import TextInputMAI from "../../../components/TextInputMAI";
 
-const GOOGLE_API_KEY = "";
+const GOOGLE_API_KEY = "AIzaSyCoP_dlnYLah-3pQtnxrwQfwF6TEMXwqtQ";
 
 export default function EnderecoAutocomplete({ endereco, setEndereco, setCoords }) {
   const [query, setQuery] = useState("");

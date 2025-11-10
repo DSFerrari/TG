@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, View, Text } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 import { Feather } from '@expo/vector-icons';
 import theme from '../../theme';
 
 export default function CategoriaMAI({
-  items,
+  items = [],
   value,
   onValueChange,
   placeholder = 'Selecione',
@@ -16,33 +16,45 @@ export default function CategoriaMAI({
     color: theme.COLORS.BLACK1,
   };
 
-  // 🔒 Proteção total contra crash
-  try {
-    const validItems = items || [];
-    const validValue = validItems.some(i => i.value === value) ? value : null;
+  const validItems = useMemo(() => {
+    if (!Array.isArray(items)) return [];
+    return items
+      .filter(item => item && item.label && item.value !== undefined)
+      .map(item => ({
+        ...item,
+        color: theme.COLORS.BLACK1,
+      }));
+  }, [items]);
 
-    return (
-      <View style={styles.container}>
-        <Text style={styles.textCategoria}>
-          Categoria
-          <Text style={{ color: theme.COLORS.RED1 }}> *</Text>
-        </Text>
+  const validValue = useMemo(() => {
+    if (!value) return null;
+    return validItems.some(i => i.value === value) ? value : null;
+  }, [value, validItems]);
 
-        <RNPickerSelect
-          onValueChange={onValueChange}
-          items={validItems}
-          value={validValue}
-          placeholder={placeholderConfig}
-          style={pickerSelectStyles}
-          useNativeAndroidPickerStyle={false}
-          Icon={() => <Feather name="chevron-down" size={24} color="gray" />}
-        />
-      </View>
-    );
-  } catch (error) {
-    console.log('Erro no RNPickerSelect:', error);
-    return null;
-  }
+  const handleValueChange = (selectedValue) => {
+    if (onValueChange && typeof onValueChange === 'function') {
+      onValueChange(selectedValue);
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.textCategoria}>
+        Categoria
+        <Text style={{ color: theme.COLORS.RED1 }}> *</Text>
+      </Text>
+
+      <RNPickerSelect
+        onValueChange={handleValueChange}
+        items={validItems}
+        value={validValue}
+        placeholder={placeholderConfig}
+        style={pickerSelectStyles}
+        useNativeAndroidPickerStyle={false}
+        Icon={() => <Feather name="chevron-down" size={24} color="gray" />}
+      />
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -74,13 +86,13 @@ const pickerSelectStyles = StyleSheet.create({
     fontSize: 16,
     paddingVertical: 12,
     paddingHorizontal: 15,
-    color: 'black',
+    color: theme.COLORS.BLACK1,
   },
   inputAndroid: {
     fontSize: 16,
     paddingHorizontal: 15,
     paddingVertical: 12,
-    color: 'black',
+    color: theme.COLORS.BLACK1,
   },
   iconContainer: {
     top: 18,

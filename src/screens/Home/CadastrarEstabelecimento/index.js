@@ -95,13 +95,13 @@ export default function CadastrarEstabelecimento() {
 
       const newEstablishment = await createEstablishment(
         establishmentData,
-        navigation
       );
 
       if (newEstablishment && newEstablishment.id) {
         const publicUrl = await uploadEstablishmentImage(
           image,
-          newEstablishment.id
+          newEstablishment.id,
+          navigation
         );
 
         if (publicUrl) {

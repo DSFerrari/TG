@@ -30,10 +30,12 @@ export default function Home() {
       setUserLocation(location.coords);
     })();
   }, []);
-
+  
 useFocusEffect(
   useCallback(() => {
     async function carregar() {
+      if (!userLocation) return;
+
       const data = await getEstablishments();
 
       if (userLocation) {
@@ -157,7 +159,7 @@ useFocusEffect(
                   distancia={distanciaTexto}
                   categoria={item.categoria || "Sem categoria"}
                   imagem={{ uri: item.url_foto }}
-                  avaliacao={item.avaliacao || 0}
+                  avaliacao={item.avaliacao_media || 0}
                   onPress={() =>
                     navegar.navigate("Detalhes", { estabelecimento: item })
                   }
