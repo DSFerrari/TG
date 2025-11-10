@@ -6,10 +6,15 @@ import Configuration from "../screens/Configuration";
 import Favorites from "../screens/Favorites";
 import ProfileStack from "./profile.routes";
 import HomeStack from "./home.routes";
+import { useContext } from "react";
+import { AppContext } from "../contexts/app";
+import HomeAdmin from "../screens/Admin/HomeAdmin";
+
 
 const Tab = createBottomTabNavigator();
 
 export default function AuthTab() {
+  const { userIsAdmin } = useContext(AppContext);
   return (
     <Tab.Navigator
       screenOptions={{
@@ -145,6 +150,18 @@ export default function AuthTab() {
           },
         })}
       />
+      {userIsAdmin &&
+        <Tab.Screen
+          name="AdminHome"
+        component={HomeAdmin}
+        options={{
+          headerShown: true,
+          headerTitle: "Configurações",
+          headerTintColor: theme.COLORS.WHITE3,
+          headerStyle: { backgroundColor: theme.COLORS.BLUE1 },
+        }}
+        />
+      }
     </Tab.Navigator>
   );
 }

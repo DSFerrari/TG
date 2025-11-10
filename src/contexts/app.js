@@ -251,7 +251,7 @@ async function getEstablishments() {
     const { data, error } = await supabase
       .from("estabelecimentos_view")
       .select("*")
-      .eq("status", "aprovado")
+     // .eq("status", "aprovado")
       .order("id", { ascending: false });
 
     if (error) throw error;
@@ -265,21 +265,21 @@ async function getEstablishments() {
   }
 }
 
-  async function getAvaliacoesByEstabelecimento(id_estabelecimento) {
-    try {
-      const { data, error } = await supabase
-        .from('avaliacoes')
-        .select('*')
-        .eq('id_estabelecimento', id_estabelecimento)
-        .order('data_criacao', { ascending: false });
+async function getAvaliacoesByEstabelecimento(id_estabelecimento) {
+  try {
+    const { data, error } = await supabase
+      .from('avaliacoes_view')
+      .select('id, id_estabelecimento, id_usuario, nota, titulo, comentario, eh_anonimo, data_criacao, nome_usuario')
+      .eq('id_estabelecimento', id_estabelecimento)
+      .order('data_criacao', { ascending: false });
 
-      if (error) throw error;
-      return data || [];
-    } catch (err) {
-      Alert.alert('Erro', 'Não foi possível carregar as avaliações.');
-      return [];
-    }
+    if (error) throw error;
+    return data || [];
+  } catch (err) {
+    Alert.alert('Erro', err.message || 'Não foi possível carregar as avaliações.');
+    return [];
   }
+}
 
   async function createAvaliacao({ id_estabelecimento, nota, titulo, comentario, eh_anonimo }) {
     if (!user) {

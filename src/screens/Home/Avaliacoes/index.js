@@ -53,7 +53,7 @@ export default function Avaliacoes() {
           avaliacoes.map((item) => (
             <View key={item.id} style={styles.card}>
               <Text style={styles.nome}>
-                {item.eh_anonimo ? 'Anônimo' : item.id_usuario?.email || 'Usuário'}{' '}
+                {item.eh_anonimo? 'Anônimo': item.nome_usuario || 'Usuário'}
                 {item.deficiencia ? `- ${item.deficiencia}` : ''}
               </Text>
 

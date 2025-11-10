@@ -35,9 +35,11 @@ export default function Routes() {
     return <AuthRoutes />;
   }
 
-  if (userIsAdmin) {
-    return <AdminRoutes />;
-  }
+ // if (userIsAdmin) {
+ //   return 
+  //  <AppRoutes />
+    //<AdminRoutes />;
+ // }
 
   return <AppRoutes />;
 }
