@@ -251,7 +251,7 @@ async function getEstablishments() {
     const { data, error } = await supabase
       .from("estabelecimentos_view")
       .select("*")
-     // .eq("status", "aprovado")
+     .eq("status", "aprovado")
       .order("id", { ascending: false });
 
     if (error) throw error;
