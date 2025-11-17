@@ -8,7 +8,8 @@ import ProfileStack from "./profile.routes";
 import HomeStack from "./home.routes";
 import { useContext } from "react";
 import { AppContext } from "../contexts/app";
-import HomeAdmin from "../screens/Admin/HomeAdmin";
+import HomeAdmin from "../screens/Admin/Home";
+import AdminRoutes from "./admin.routes";
 
 
 const Tab = createBottomTabNavigator();
@@ -153,14 +154,35 @@ export default function AuthTab() {
       {userIsAdmin &&
         <Tab.Screen
           name="AdminHome"
-        component={HomeAdmin}
+        component={AdminRoutes}
         options={{
-          headerShown: true,
-          headerTitle: "Configurações",
+          headerShown: false,
+          headerTitle: "Administração",
           headerTintColor: theme.COLORS.WHITE3,
           headerStyle: { backgroundColor: theme.COLORS.BLUE1 },
+           tabBarIcon: () => (
+            <MaterialCommunityIcons
+              name="shield-account-outline"
+              color={theme.COLORS.WHITE3}
+              size={24}
+            />
+          ),
         }}
-        />
+        listeners={({ navigation, route }) => ({
+          tabPress: (e) => {
+            const state = navigation.getState();
+            const currentRoute = state.routes[state.index];
+
+            if (currentRoute.name === route.name) {
+              e.preventDefault();
+             navigation.reset({
+                index: 0,
+                routes: [{ name: "Administração"}],
+              });
+            }
+          },
+        })}
+      />
       }
     </Tab.Navigator>
   );

@@ -1,18 +1,18 @@
 import React, { useMemo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, AccessibilityInfo } from 'react-native';
 import theme from '../../theme';
 
 const ACESSIBILIDADES_DISPONIVEIS = [
-"Piso tátil",
-"Elevador",
-"Intérprete de Libras",
-"Fraldário",
-"Banheiro acessível",
-"Rampas de acesso",
-"Portas largas",
-"Sinalização em Braille",
-"Alarme visual e sonoro",
-"Balcão rebaixado",
+  "Piso tátil",
+  "Elevador",
+  "Intérprete de Libras",
+  "Fraldário",
+  "Banheiro acessível",
+  "Rampas de acesso",
+  "Portas largas",
+  "Sinalização em Braille",
+  "Alarme visual e sonoro",
+  "Balcão rebaixado",
 ];
 
 const explodeAndClean = (value) => {
@@ -23,7 +23,6 @@ const explodeAndClean = (value) => {
     .filter(Boolean);
   return parts;
 };
-
 
 const normalizeArray = (input) => {
   if (!input) return [];
@@ -40,7 +39,7 @@ const normalizeArray = (input) => {
 
     if (!seen.has(key)) {
       seen.add(key);
-    
+
       const titleCase = item
         .toLowerCase()
         .split(' ')
@@ -62,48 +61,87 @@ export default function CheckboxAcessibilidade({ selectedAcessibilidade = [], on
   );
 
   const isSelected = (def) => {
-
     const key = def.normalize('NFKD').replace(/\p{Diacritic}/gu, '').toLowerCase();
-    return normalizedSelected.some(s => s.normalize('NFKD').replace(/\p{Diacritic}/gu, '').toLowerCase() === key);
+    return normalizedSelected.some(
+      s => s.normalize('NFKD').replace(/\p{Diacritic}/gu, '').toLowerCase() === key
+    );
   };
 
- const toggleAcessibilidade = (acessibilidade) => {
-  const current = normalizeArray(selectedAcessibilidade);
-  const already = current.findIndex(d => 
-    d.normalize('NFKD').replace(/\p{Diacritic}/gu, '').toLowerCase() === 
-    acessibilidade.normalize('NFKD').replace(/\p{Diacritic}/gu, '').toLowerCase()
-  );
+  const toggleAcessibilidade = (acessibilidade) => {
+    const current = normalizeArray(selectedAcessibilidade);
+    const already = current.findIndex(d =>
+      d.normalize('NFKD').replace(/\p{Diacritic}/gu, '').toLowerCase() ===
+      acessibilidade.normalize('NFKD').replace(/\p{Diacritic}/gu, '').toLowerCase()
+    );
 
-  let next;
-  if (already >= 0) {
-    next = current.filter((_, idx) => idx !== already);
-  } else {
-    next = [...current, acessibilidade];
-  }
+    let next;
+    let ativado = false;
 
-  onSelectionChange(next);
-};
+    if (already >= 0) {
+      next = current.filter((_, idx) => idx !== already);
+    } else {
+      next = [...current, acessibilidade];
+      ativado = true;
+    }
+
+    onSelectionChange(next);
+
+    AccessibilityInfo.announceForAccessibility(
+      ativado
+        ? `${acessibilidade} marcada`
+        : `${acessibilidade} desmarcada`
+    );
+  };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.titulo}>Acessibilidade:</Text>
-      {ACESSIBILIDADES_DISPONIVEIS.map((acessibilidade, index) => (
-        <TouchableOpacity
-          key={index}
-          style={styles.checkboxContainer}
-          onPress={() => toggleAcessibilidade(acessibilidade)}
-        >
-          <View style={[
-            styles.checkbox,
-            isSelected(acessibilidade) && styles.checkboxSelected
-          ]}>
-            {isSelected(acessibilidade) && (
-              <Text style={styles.checkmark}>✓</Text>
-            )}
-          </View>
-          <Text style={styles.label}>{acessibilidade}</Text>
-        </TouchableOpacity>
-      ))}
+    <View style={styles.container} accessible={true}>
+      <Text
+        style={styles.titulo}
+        accessibilityRole="header"
+        accessibilityLabel="Opções de acessibilidade"
+      >
+        Acessibilidade
+      </Text>
+
+      {ACESSIBILIDADES_DISPONIVEIS.map((item, index) => {
+        const selected = isSelected(item);
+
+        return (
+          <TouchableOpacity
+            key={index}
+            style={styles.checkboxContainer}
+            onPress={() => toggleAcessibilidade(item)}
+            accessibilityRole="checkbox"
+            accessibilityLabel={item}
+            accessibilityState={{ checked: selected }}
+            accessibilityHint="Toque duas vezes para marcar ou desmarcar"
+            focusable={true}
+            activeOpacity={0.6}
+          >
+            <View style={[
+              styles.checkbox,
+              selected && styles.checkboxSelected
+            ]}>
+              {selected && (
+                <Text
+                  style={styles.checkmark}
+                  accessibilityElementsHidden
+                  importantForAccessibility="no"
+                >
+                  ✓
+                </Text>
+              )}
+            </View>
+            <Text
+              style={styles.label}
+              accessibilityElementsHidden
+              importantForAccessibility="no"
+            >
+              {item}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 }
@@ -114,7 +152,7 @@ const styles = StyleSheet.create({
     padding: 15,
     backgroundColor: theme.COLORS.WHITE3,
     borderRadius: 8,
-    marginBottom: -20
+    marginBottom: -20,
   },
   titulo: {
     fontSize: 16,
@@ -124,25 +162,25 @@ const styles = StyleSheet.create({
   checkboxContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 5,
+    marginVertical: 6,
   },
   checkbox: {
-    width: 20,
-    height: 20,
+    width: 22,
+    height: 22,
     borderWidth: 2,
     borderColor: theme.COLORS.BLACK3,
-    marginRight: 10,
+    marginRight: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 3,
+    borderRadius: 4,
   },
   checkboxSelected: {
     backgroundColor: theme.COLORS.BLUE1,
     borderColor: theme.COLORS.BLUE1,
   },
   checkmark: {
-    color: 'white',
-    fontSize: 12,
+    color: theme.COLORS.WHITE3,
+    fontSize: 14,
     fontWeight: 'bold',
   },
   label: {

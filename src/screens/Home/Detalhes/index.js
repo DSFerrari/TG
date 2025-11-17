@@ -1,11 +1,10 @@
 import React, { useContext, useLayoutEffect } from 'react';
-import { View, Text, Image, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, Image, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Linking } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
-
 import ButtonMAI from '../../../components/ButtonMAI';
 import theme from '../../../theme';
 import { styles } from './styles';
@@ -15,7 +14,7 @@ export default function Detalhes() {
   const route = useRoute();
   const navigation = useNavigation();
   const { estabelecimento } = route.params;
-  const { favoriteIds, toggleFavorite } = useContext(AppContext);
+  const { favoriteIds, toggleFavorite, deleteEstablishment } = useContext(AppContext);
 
   const isFavorite = favoriteIds.has(estabelecimento.id);
 
@@ -25,6 +24,26 @@ export default function Detalhes() {
     });
   }, [navigation, estabelecimento.nome]);
 
+   async function rejeitarEstabelecimento(estabelecimento) {
+      Alert.alert(
+        "Rejeitar Estabelecimento",
+        "Tem certeza que deseja rejeitar e remover este estabelecimento?\n\nIsso apagará:\n• o registro\n• a foto\n• os favoritos.\n\nEssa ação é permanente.",
+        [
+          { text: "Cancelar", style: "cancel" },
+          {
+            text: "Confirmar",
+            style: "destructive",
+            onPress: async () => {
+              const ok = await deleteEstablishment(estabelecimento);
+              if (ok) {
+                setEstabs(prev => prev.filter(e => e.id !== estab.id));
+              }
+            },
+          },
+        ]
+      );
+    }
+  
   const abrirNoMapa = () => {
     const query = encodeURIComponent(estabelecimento.endereco);
     const url = `https://www.google.com/maps/search/?api=1&query=${query}`;
@@ -136,6 +155,12 @@ export default function Detalhes() {
               name="Editar estabelecimento"
               onPress={() => console.log('Implementar navegação para Editar')}
             />
+            <ButtonMAI
+            name="Excluir estabelecimento"
+            onPress={() => rejeitarEstabelecimento(estabelecimento)}
+            />
+
+
           </View>
         </View>
       </ScrollView>

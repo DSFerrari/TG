@@ -1,5 +1,3 @@
-// screens/ConfirmEmail/index.js
-
 import React, { useState, useContext,useEffect } from 'react';
 import { View, Text, Alert,TouchableWithoutFeedback,Platform,Keyboard,KeyboardAvoidingView,ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { StyleSheet, View, Text } from 'react-native';
+import { StyleSheet, View, Text, AccessibilityInfo } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 import { Feather } from '@expo/vector-icons';
 import theme from '../../theme';
@@ -34,14 +34,30 @@ export default function CategoriaMAI({
   const handleValueChange = (selectedValue) => {
     if (onValueChange && typeof onValueChange === 'function') {
       onValueChange(selectedValue);
+
+      const labelSel = validItems.find(i => i.value === selectedValue)?.label;
+      if (labelSel) {
+        AccessibilityInfo.announceForAccessibility(
+          `Categoria selecionada: ${labelSel}`
+        );
+      }
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.textCategoria}>
-        Categoria
-        <Text style={{ color: theme.COLORS.RED1 }}> *</Text>
+    <View
+      style={styles.container}
+      accessible={true}
+      accessibilityLabel="Categoria, campo obrigatório"
+      accessibilityHint="Toque duas vezes para escolher uma categoria"
+      accessibilityRole="menu"
+    >
+      <Text
+        style={styles.label}
+        accessibilityElementsHidden={true}
+        importantForAccessibility="no"
+      >
+        Categoria <Text style={{ color: theme.COLORS.RED1 }}>*</Text>
       </Text>
 
       <RNPickerSelect
@@ -51,7 +67,15 @@ export default function CategoriaMAI({
         placeholder={placeholderConfig}
         style={pickerSelectStyles}
         useNativeAndroidPickerStyle={false}
-        Icon={() => <Feather name="chevron-down" size={24} color="gray" />}
+        Icon={() => (
+          <Feather
+            name="chevron-down"
+            size={24}
+            color="gray"
+            accessibilityElementsHidden={true}
+            importantForAccessibility="no"
+          />
+        )}
       />
     </View>
   );
@@ -68,16 +92,15 @@ const styles = StyleSheet.create({
     marginBottom: -6,
     marginTop: 20,
   },
-  textCategoria: {
+  label: {
     fontSize: 14,
-    fontWeight: '400',
     position: 'absolute',
     top: -10,
     left: 12,
-    color: theme.COLORS.BLACK1,
     zIndex: 1,
     backgroundColor: theme.COLORS.WHITE3,
     paddingHorizontal: 5,
+    color: theme.COLORS.BLACK1,
   },
 });
 

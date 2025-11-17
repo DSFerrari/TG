@@ -7,7 +7,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   FlatList,
-  ActivityIndicator
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
@@ -19,6 +19,8 @@ import SearchMAI from "../../components/SearchMAI";
 import CardMAI from "../../components/CardMAI";
 import theme from "../../theme";
 import { AppContext } from "../../contexts/app";
+
+import FilterModal from "../../components/FilterModal/FilterModal";
 
 export default function Favorites() {
   const navegar = useNavigation();
@@ -33,125 +35,156 @@ export default function Favorites() {
   const [favoritos, setFavoritos] = useState([]);
   const [filtrados, setFiltrados] = useState([]);
   const [search, setSearch] = useState("");
+  const [filters, setFilters] = useState(null);
+  const [filterOpen, setFilterOpen] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
 
-  function toNumberOrNull(v) {
-    if (v === null || v === undefined) return null;
-    const s = String(v).trim().replace(",", ".");
-    const n = Number(s);
-    return Number.isFinite(n) ? n : null;
+  function normalize(str) {
+    if (!str) return "";
+    return String(str)
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
   }
 
-  function extractCoords(item) {
-    let lat = toNumberOrNull(item?.latitude ?? item?.lat);
-    let lon = toNumberOrNull(item?.longitude ?? item?.lng ?? item?.long);
-
-    if ((lat === null || lon === null) && item?.estabelecimento) {
-      lat = toNumberOrNull(item.estabelecimento.latitude ?? item.estabelecimento.lat);
-      lon = toNumberOrNull(item.estabelecimento.longitude ?? item.estabelecimento.lng ?? item.estabelecimento.long);
-    }
-
-    if ((lat === null || lon === null) && item?.location) {
-      lat = toNumberOrNull(
-        item.location.latitude ??
-        item.location.lat ??
-        item.location?.coords?.latitude ??
-        item.location?.coords?.lat
-      );
-      lon = toNumberOrNull(
-        item.location.longitude ??
-        item.location.lng ??
-        item.location.long ??
-        item.location?.coords?.longitude ??
-        item.location?.coords?.lng ??
-        item.location?.coords?.long
-      );
-    }
-
-    return { lat, lon };
-  }
-
-  function calcularDistancia(lat1, lon1, lat2, lon2) {
-    const R = 6371;
-    const dLat = ((lat2 - lat1) * Math.PI) / 180;
-    const dLon = ((lon2 - lon1) * Math.PI) / 180;
-    const a =
-      Math.sin(dLat / 2) ** 2 +
-      Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) ** 2;
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  }
   useEffect(() => {
     (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        console.log("Permissão de localização negada");
-        return;
-      }
-      const location = await Location.getCurrentPositionAsync({});
-      setUserLocation(location.coords);
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") return;
+
+        const loc = await Location.getCurrentPositionAsync({});
+        if (loc?.coords) {
+          setUserLocation(loc.coords);
+        }
+      } catch {}
     })();
   }, []);
 
+  function calcDist(item) {
+    const lat = Number(item?.latitude) || null;
+    const lon = Number(item?.longitude) || null;
+    if (!lat || !lon || !userLocation) return Infinity;
+
+    const R = 6371;
+    const dLat = ((lat - userLocation.latitude) * Math.PI) / 180;
+    const dLon = ((lon - userLocation.longitude) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos((userLocation.latitude * Math.PI) / 180) *
+        Math.cos((lat * Math.PI) / 180) *
+        Math.sin(dLon / 2) ** 2;
+
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
   useFocusEffect(
     useCallback(() => {
-      async function carregarFavoritos() {
-         if (!userLocation) return;
-        const data = await getFavoriteEstablishments();
+      async function carregar() {
+        try {
+          const data = await getFavoriteEstablishments();
 
-        const normalizados = data.map((raw) => {
-          const { lat, lon } = extractCoords(raw);
-          return { ...raw, _lat: lat, _lon: lon };
-        });
-
-        let lista = normalizados;
-
-        if (userLocation) {
-          const { latitude: ulat, longitude: ulon } = userLocation;
-
-          lista = normalizados.map((it) => {
-            if (it._lat !== null && it._lon !== null) {
-              return { ...it, _dist: calcularDistancia(ulat, ulon, it._lat, it._lon) };
-            }
-            return { ...it, _dist: Infinity };
+          const lista = data.map((raw) => {
+            const base = raw.estabelecimento ?? raw;
+            return {
+              id: base.id,
+              nome: base.nome,
+              categoria: base.categoria,
+              url_foto: base.url_foto,
+              avaliacao_media: base.avaliacao_media,
+              latitude: base.latitude,
+              longitude: base.longitude,
+              acessibilidades: base.acessibilidades,
+            };
           });
 
-          lista.sort((a, b) => a._dist - b._dist);
+          setFavoritos(lista);
+          setFiltrados(lista);
+        } catch {
+          setFavoritos([]);
+          setFiltrados([]);
         }
-
-        setFavoritos(lista);
-        setFiltrados(lista);
       }
 
-      carregarFavoritos();
-    }, [userLocation])
+      carregar();
+    }, [])
   );
 
   useEffect(() => {
-    const delayDebounce = setTimeout(() => {
-      if (search.trim() === "") {
-        setFiltrados(favoritos);
-      } else {
-        const filtro = favoritos.filter((item) =>
-          (item.nome ?? item?.estabelecimento?.nome ?? "")
-            .toLowerCase()
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .includes(
-              search
-                .toLowerCase()
-                .normalize("NFD")
-                .replace(/[\u0300-\u036f]/g, "")
-            )
-        );
-        setFiltrados(filtro);
-      }
-    }, 400);
+    let lista = [...favoritos];
 
-    return () => clearTimeout(delayDebounce);
-  }, [search, favoritos]);
+    if (search.trim() !== "") {
+      const termo = normalize(search);
+      lista = lista.filter((item) => normalize(item.nome).includes(termo));
+    }
+
+    if (filters) {
+      const { categoria, distancia, avaliacao, acessibilidades } = filters;
+
+      if (categoria) {
+        lista = lista.filter(
+          (item) => normalize(item.categoria) === normalize(categoria)
+        );
+      }
+
+      if (avaliacao) {
+        lista = lista.filter(
+          (item) => (item.avaliacao_media ?? 0) >= avaliacao
+        );
+      }
+
+      if (distancia && userLocation) {
+        const nums = distancia.match(/\d+/g) || [];
+
+        let minDist = 0;
+        let maxDist = Infinity;
+
+        if (distancia.includes("km+")) {
+          minDist = Number(nums[0] || 0);
+          maxDist = Infinity;
+        } else if (nums.length >= 2) {
+          minDist = Number(nums[0]);
+          maxDist = Number(nums[1]);
+        } else if (nums.length === 1) {
+          minDist = 0;
+          maxDist = Number(nums[0]);
+        }
+
+        lista = lista.filter((item) => {
+          const dist = calcDist(item);
+          return dist >= minDist && dist <= maxDist;
+        });
+      }
+
+      if (acessibilidades?.length > 0) {
+        lista = lista.filter((item) => {
+          const texto = normalize(item?.acessibilidades);
+          if (!texto) return false;
+          return acessibilidades.every((ac) =>
+            texto.includes(normalize(ac))
+          );
+        });
+      }
+    }
+
+    // Ordena por distância
+    if (userLocation) {
+      lista.sort((a, b) => calcDist(a) - calcDist(b));
+    }
+
+    setFiltrados(lista);
+  }, [favoritos, search, filters, userLocation]);
+
+  function aplicarFiltros(f) {
+    const vazio =
+      !f.categoria &&
+      !f.distancia &&
+      !f.avaliacao &&
+      (!f.acessibilidades || f.acessibilidades.length === 0);
+
+    setFilters(vazio ? null : f);
+    setFilterOpen(false);
+  }
 
   if (loadingFavorites) {
     return (
@@ -171,11 +204,7 @@ export default function Favorites() {
         <SafeAreaView edges={["bottom"]}>
           <FlatList
             data={filtrados}
-            keyExtractor={(item) =>
-              item.id?.toString() ||
-              item?.estabelecimento_id?.toString() ||
-              item?.estabelecimento?.id?.toString()
-            }
+            keyExtractor={(item) => item.id.toString()}
             showsVerticalScrollIndicator={false}
             ListHeaderComponent={
               <>
@@ -183,62 +212,57 @@ export default function Favorites() {
                   <SearchMAI value={search} onChangeText={setSearch} />
                 </View>
 
-                <ButtonMAI name="Filtros" icon={"menu"} />
+                <ButtonMAI
+                  name="Filtros"
+                  icon="menu"
+                  onPress={() => setFilterOpen(true)}
+                />
+
+                <FilterModal
+                  visible={filterOpen}
+                  onClose={() => setFilterOpen(false)}
+                  onApply={aplicarFiltros}
+                />
               </>
             }
             renderItem={({ item }) => {
-              let distanciaTexto = "—";
+              const dist = userLocation ? calcDist(item) : Infinity;
 
-              if (userLocation && item?._lat !== null && item?._lon !== null) {
-                const dist =
-                  typeof item._dist === "number"
-                    ? item._dist
-                    : calcularDistancia(
-                      userLocation.latitude,
-                      userLocation.longitude,
-                      item._lat,
-                      item._lon
-                    );
-
-                distanciaTexto =
-                  dist < 1
-                    ? `${(dist * 1000).toFixed(0)} m`
-                    : `${dist.toFixed(1)} km`;
-              }
+              const distTxt =
+                dist === Infinity
+                  ? "—"
+                  : dist < 1
+                  ? `${(dist * 1000).toFixed(0)} m`
+                  : `${dist.toFixed(1)} km`;
 
               return (
                 <CardMAI
-                  nome={item.nome ?? item?.estabelecimento?.nome ?? "Sem nome"}
-                  distancia={distanciaTexto}
-                  categoria={item.categoria || item?.estabelecimento?.categoria || "Sem categoria"}
-                  imagem={{ uri: item.url_foto ?? item?.estabelecimento?.url_foto }}
-                  avaliacao={item.avaliacao_media ?? item?.estabelecimento?.avaliacao_media ?? 0}
+                  nome={item.nome}
+                  distancia={distTxt}
+                  categoria={item.categoria || "Sem categoria"}
+                  imagem={{ uri: item.url_foto }}
+                  avaliacao={item.avaliacao_media || 0}
                   onPress={() =>
                     navegar.navigate("Início", {
                       screen: "Detalhes",
-                      params: { estabelecimento: item.estabelecimento ?? item }
+                      params: { estabelecimento: item },
                     })
                   }
-                  isFavorite={favoriteIds.has(
-                    item.id ?? item?.estabelecimento_id ?? item?.estabelecimento?.id
-                  )}
+                  isFavorite={favoriteIds.has(item.id)}
                   onToggleFavorite={async () => {
-                    const id = item.id ?? item?.estabelecimento_id ?? item?.estabelecimento?.id;
-                    await toggleFavorite(id);
+                    await toggleFavorite(item.id);
 
-                    setFavoritos((prev) => prev.filter((f) =>
-                      (f.id ?? f.estabelecimento_id ?? f.estabelecimento?.id) !== id
-                    ));
-                    setFiltrados((prev) => prev.filter((f) =>
-                      (f.id ?? f.estabelecimento_id ?? f.estabelecimento?.id) !== id
-                    ));
+                    // Remove imediatamente
+                    setFavoritos((prev) => prev.filter((f) => f.id !== item.id));
+                    setFiltrados((prev) => prev.filter((f) => f.id !== item.id));
                   }}
-
                 />
               );
             }}
             ListEmptyComponent={() => (
-              <Text style={styles.empty}>Você ainda não favoritou nenhum local.</Text>
+              <Text style={styles.empty}>
+                Você ainda não favoritou nenhum local.
+              </Text>
             )}
           />
         </SafeAreaView>

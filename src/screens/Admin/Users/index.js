@@ -1,8 +1,8 @@
 import { useEffect, useState, useContext } from "react";
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
-import { supabase } from "../../services/supabase";
-import { AppContext } from "../../contexts/app";
-import theme from "../../theme";
+import { supabase } from "../../../services/supabase";
+import { AppContext } from "../../../contexts/app";
+import theme from "../../../theme";
 
 export default function UsersAdmin() {
   const { makeUserAdmin, banUser, unbanUser, user } = useContext(AppContext);
@@ -12,7 +12,7 @@ export default function UsersAdmin() {
   async function fetchUsers() {
     try {
       setLoading(true);
-      const { data, error } = await supabase.from("profiles").select("*").order("nome");
+      const { data, error } = await supabase.from("profiles").select("*").order("full_name");
       if (error) throw error;
       setUsers(data);
     } catch (err) {
@@ -67,10 +67,11 @@ export default function UsersAdmin() {
             }}
           >
             <Text style={{ fontWeight: "600", color: theme.COLORS.BLUE1 }}>
-              {item.nome || "Usuário sem nome"}
+              {item.full_name || "Usuário sem nome"}
             </Text>
             <Text>Status: {item.status || "ativo"}</Text>
             <Text>Admin: {item.is_admin ? "✅" : "❌"}</Text>
+            <Text>Email: {item.email  || ""}</Text>
 
             {item.id !== user?.id && (
               <View style={{ flexDirection: "row", marginTop: 10, gap: 10 }}>

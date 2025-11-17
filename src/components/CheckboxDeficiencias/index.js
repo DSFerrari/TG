@@ -1,22 +1,21 @@
 import React, { useMemo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, AccessibilityInfo } from 'react-native';
 import theme from '../../theme';
 
 const DEFICIENCIAS_DISPONIVEIS = [
   "Deficiência Visual",
   "Deficiência Auditiva",
   "Deficiência Física",
+  "Deficiência Intelectual",
 ];
 
 const explodeAndClean = (value) => {
   if (!value) return [];
-  const parts = String(value)
+  return String(value)
     .split(/[,;\/\|]|(\s+e\s+)/i)
     .map(s => s && String(s).trim())
     .filter(Boolean);
-  return parts;
 };
-
 
 const normalizeArray = (input) => {
   if (!input) return [];
@@ -33,13 +32,14 @@ const normalizeArray = (input) => {
 
     if (!seen.has(key)) {
       seen.add(key);
-    
+
       const titleCase = item
         .toLowerCase()
         .split(' ')
         .filter(Boolean)
         .map(s => s[0].toUpperCase() + s.slice(1))
         .join(' ');
+
       result.push(titleCase);
     }
   });
@@ -47,7 +47,10 @@ const normalizeArray = (input) => {
   return result;
 };
 
-export default function CheckboxDeficiencias({ selectedDeficiencias = [], onSelectionChange }) {
+export default function CheckboxDeficiencias({
+  selectedDeficiencias = [],
+  onSelectionChange
+}) {
 
   const normalizedSelected = useMemo(
     () => normalizeArray(selectedDeficiencias),
@@ -55,48 +58,93 @@ export default function CheckboxDeficiencias({ selectedDeficiencias = [], onSele
   );
 
   const isSelected = (def) => {
-
     const key = def.normalize('NFKD').replace(/\p{Diacritic}/gu, '').toLowerCase();
-    return normalizedSelected.some(s => s.normalize('NFKD').replace(/\p{Diacritic}/gu, '').toLowerCase() === key);
+    return normalizedSelected.some(s =>
+      s.normalize('NFKD').replace(/\p{Diacritic}/gu, '').toLowerCase() === key
+    );
   };
 
- const toggleDeficiencia = (deficiencia) => {
-  const current = normalizeArray(selectedDeficiencias);
-  const already = current.findIndex(d => 
-    d.normalize('NFKD').replace(/\p{Diacritic}/gu, '').toLowerCase() === 
-    deficiencia.normalize('NFKD').replace(/\p{Diacritic}/gu, '').toLowerCase()
-  );
+  const toggleDeficiencia = (def) => {
+    const current = normalizeArray(selectedDeficiencias);
+    const already = current.findIndex(d =>
+      d.normalize('NFKD').replace(/\p{Diacritic}/gu, '').toLowerCase() ===
+      def.normalize('NFKD').replace(/\p{Diacritic}/gu, '').toLowerCase()
+    );
 
-  let next;
-  if (already >= 0) {
-    next = current.filter((_, idx) => idx !== already);
-  } else {
-    next = [...current, deficiencia];
-  }
+    let next;
+    let ativado = false;
 
-  onSelectionChange(next);
-};
+    if (already >= 0) {
+      next = current.filter((_, idx) => idx !== already);
+    } else {
+      next = [...current, def];
+      ativado = true;
+    }
+
+    onSelectionChange(next);
+
+    AccessibilityInfo.announceForAccessibility(
+      ativado
+        ? `${def} marcada.`
+        : `${def} desmarcada.`
+    );
+  };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.titulo}>Selecione suas deficiências:</Text>
-      {DEFICIENCIAS_DISPONIVEIS.map((deficiencia, index) => (
-        <TouchableOpacity
-          key={index}
-          style={styles.checkboxContainer}
-          onPress={() => toggleDeficiencia(deficiencia)}
-        >
-          <View style={[
-            styles.checkbox,
-            isSelected(deficiencia) && styles.checkboxSelected
-          ]}>
-            {isSelected(deficiencia) && (
-              <Text style={styles.checkmark}>✓</Text>
-            )}
-          </View>
-          <Text style={styles.label}>{deficiencia}</Text>
-        </TouchableOpacity>
-      ))}
+    <View
+      style={styles.container}
+      accessible={true}
+      accessibilityRole="form"
+      accessibilityLabel="Seleção de deficiências"
+    >
+      <Text
+        style={styles.titulo}
+        accessibilityRole="header"
+        accessibilityLabel="Selecione suas deficiências"
+      >
+        Selecione suas deficiências
+      </Text>
+
+      {DEFICIENCIAS_DISPONIVEIS.map((def, index) => {
+        const selected = isSelected(def);
+
+        return (
+          <TouchableOpacity
+            key={index}
+            style={styles.checkboxContainer}
+            onPress={() => toggleDeficiencia(def)}
+            accessibilityRole="checkbox"
+            accessibilityLabel={def}
+            accessibilityHint="Toque duas vezes para marcar ou desmarcar"
+            accessibilityState={{ checked: selected }}
+            focusable={true}
+            activeOpacity={0.6}
+          >
+            <View style={[
+              styles.checkbox,
+              selected && styles.checkboxSelected
+            ]}>
+              {selected && (
+                <Text
+                  style={styles.checkmark}
+                  accessibilityElementsHidden
+                  importantForAccessibility="no"
+                >
+                  ✓
+                </Text>
+              )}
+            </View>
+
+            <Text
+              style={styles.label}
+              accessibilityElementsHidden
+              importantForAccessibility="no"
+            >
+              {def}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 }
@@ -117,25 +165,25 @@ const styles = StyleSheet.create({
   checkboxContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 5,
+    marginVertical: 6,
   },
   checkbox: {
-    width: 20,
-    height: 20,
+    width: 22,
+    height: 22,
     borderWidth: 2,
     borderColor: theme.COLORS.BLACK3,
-    marginRight: 10,
+    marginRight: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 3,
+    borderRadius: 4,
   },
   checkboxSelected: {
     backgroundColor: theme.COLORS.BLUE1,
     borderColor: theme.COLORS.BLUE1,
   },
   checkmark: {
-    color: 'white',
-    fontSize: 12,
+    color: theme.COLORS.WHITE3,
+    fontSize: 14,
     fontWeight: 'bold',
   },
   label: {

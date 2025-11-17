@@ -34,12 +34,5 @@ export default function Routes() {
   if (isRecoveringPassword) {
     return <AuthRoutes />;
   }
-
- // if (userIsAdmin) {
- //   return 
-  //  <AppRoutes />
-    //<AdminRoutes />;
- // }
-
   return <AppRoutes />;
 }
