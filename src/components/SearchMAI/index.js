@@ -13,7 +13,6 @@ export default function SearchMAI({
   function handleChange(text) {
     onChangeText?.(text);
 
-    // Feedback verbal a cada atualização
     if (text.length === 1) {
       AccessibilityInfo.announceForAccessibility("Digitando...");
     }

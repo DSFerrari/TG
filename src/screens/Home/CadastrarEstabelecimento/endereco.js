@@ -43,7 +43,6 @@ export default function EnderecoAutocomplete({ endereco, setEndereco, setCoords 
         const data = await response.json();
         setResults(data.predictions || []);
       } catch (err) {
-        console.log("Erro no autocomplete:", err);
       } finally {
         setLoading(false);
       }

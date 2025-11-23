@@ -27,7 +27,15 @@ const  navegar = useNavigation();
             <Text style={styles.textSelect}>Estabelecimento Pendentes</Text>
             <Text style={{marginLeft: 10,marginTop:10, color: theme.COLORS.BLACK1}}>Lista de estabelecimentos para aprovar</Text>
         </TouchableOpacity>
-        
+
+        <TouchableOpacity onPress={()=> navegar.navigate("AdminSolicitacoes")} style={styles.select}>
+            <Text style={styles.textSelect}>Alterações Pendentes</Text>
+            <Text style={{marginLeft: 10,marginTop:10, color: theme.COLORS.BLACK1}}>Lista de alterações de estabelecimentos para análise</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={()=> navegar.navigate("AdminPedidosAvaliacao")} style={styles.select}>
+            <Text style={styles.textSelect}>Avaliações Pendentes</Text>
+            <Text style={{marginLeft: 10,marginTop:10, color: theme.COLORS.BLACK1}}>Lista de avaliações para análise</Text>
+        </TouchableOpacity>
     </SafeAreaView>
     </ScrollView>
     </KeyboardAvoidingView>

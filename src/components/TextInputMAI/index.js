@@ -18,7 +18,7 @@ export default function TextInputMAI({ texto, password, style, ...props }) {
     );
   }
 
-  const isRequired = true; // já que tem *
+  const isRequired = true;
 
   const fieldLabel = `${texto}${isRequired ? " — obrigatório" : ""}`;
 

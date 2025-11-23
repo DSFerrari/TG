@@ -33,7 +33,6 @@ const handleLogin = async () => {
     try {
         await signIn(email, senha);
     } catch (error) {
-        console.log("Erro no login:", error);
         Alert.alert("Erro", "Ocorreu um erro durante o login");
     }
 };

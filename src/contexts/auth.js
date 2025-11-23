@@ -53,7 +53,6 @@ export default function AuthProvider({ children }) {
   });
 
   if (error) {
-    console.log("ERRO LOGIN:", error);
 
     let mensagem = "Ocorreu um erro ao fazer login.";
 
@@ -67,7 +66,6 @@ export default function AuthProvider({ children }) {
       mensagem = "Muitas tentativas. Aguarde um momento e tente novamente.";
     }
     else {
-      // Último fallback
       mensagem = error.message;
     }
 
@@ -170,7 +168,6 @@ export default function AuthProvider({ children }) {
     const { error } = await supabase.auth.signOut();
 
     if (error) {
-      console.log("Erro ao fazer logout:", error.message);
       Alert.alert(
         "Erro",
         "Não foi possível fazer logout. Tente novamente."

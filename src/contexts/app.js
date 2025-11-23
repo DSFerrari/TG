@@ -251,7 +251,7 @@ export default function AppProvider({ children }) {
       if (error) throw error;
 
       if (data && data.length > 0) {
-        Alert.alert("Sucesso!", "Novo estabelecimento cadastrado.");
+        Alert.alert("Sucesso!", "criação de estabelecimento enviada para aprovação do administrador.");
         return data[0];
       }
 
@@ -426,6 +426,251 @@ export default function AppProvider({ children }) {
     }
   }
 
+    async function solicitarEdicao(estabelecimentoId, alteracoes, justificativa, nomeEstabelecimento) {
+  if (!user) {
+    Alert.alert("Atenção", "Você precisa estar logado.");
+    return false;
+  }
+
+  try {
+    setLoadingAuth(true);
+
+    const { error } = await supabase
+      .from("estabelecimento_solicitacoes")
+      .insert([
+        {
+          id_estabelecimento: estabelecimentoId,
+          id_usuario: user.id,
+          tipo: "editar",
+          alteracoes,
+          justificativa,
+          nome_estabelecimento: nomeEstabelecimento,
+        }
+      ]);
+
+    if (error) throw error;
+
+    Alert.alert("Enviado!", "Sua solicitação de edição foi enviada para análise.");
+    return true;
+
+  } catch (err) {
+    Alert.alert("Erro", err.message || "Não foi possível enviar a solicitação.");
+    return false;
+
+  } finally {
+    setLoadingAuth(false);
+  }
+}
+
+
+ async function solicitarExclusao(estabelecimentoId, justificativa, nomeEstabelecimento) {
+  if (!user) {
+    Alert.alert("Atenção", "Você precisa estar logado.");
+    return false;
+  }
+
+  try {
+    setLoadingAuth(true);
+
+    const { error } = await supabase
+      .from("estabelecimento_solicitacoes")
+      .insert([
+        {
+          id_estabelecimento: estabelecimentoId,
+          id_usuario: user.id,
+          tipo: "excluir",
+          justificativa,
+          nome_estabelecimento: nomeEstabelecimento,
+        }
+      ]);
+
+    if (error) throw error;
+
+    Alert.alert("Solicitação enviada", "A exclusão será analisada por um administrador.");
+    return true;
+
+  } catch (err) {
+    Alert.alert("Erro", err.message || "Não foi possível enviar a solicitação.");
+    return false;
+
+  } finally {
+    setLoadingAuth(false);
+  }
+}
+
+  async function listarSolicitacoesUsuario() {
+    if (!user) return [];
+
+    try {
+      const { data, error } = await supabase
+        .from("estabelecimento_solicitacoes")
+        .select(`*, estabelecimentos(nome)`)
+        .eq("id_usuario", user.id)
+        .order("data_solicitacao", { ascending: false });
+
+      if (error) throw error;
+
+      return data;
+    } catch (err) {
+      Alert.alert("Erro", err.message);
+      return [];
+    }
+  }
+
+  async function listarSolicitacoesAdmin() {
+    if (!userIsAdmin) return [];
+
+    try {
+      const { data, error } = await supabase
+        .from("estabelecimento_solicitacoes")
+        .select(`*, estabelecimentos(nome)`)
+        .order("data_solicitacao", { ascending: false });
+
+      if (error) throw error;
+
+      return data;
+    } catch (err) {
+      Alert.alert("Erro", err.message);
+      return [];
+    }
+  }
+
+async function aprovarSolicitacao(id_solicitacao, id_estabelecimento, alteracoes) {
+  try {
+    setLoadingAuth(true);
+
+    const { data: solicitacao, error: solErr } = await supabase
+      .from("estabelecimento_solicitacoes")
+      .select("*")
+      .eq("id", id_solicitacao)
+      .single();
+
+    if (solErr) throw solErr;
+
+    if (solicitacao.tipo === "excluir") {
+      const { data: estab } = await supabase
+        .from("estabelecimentos")
+        .select("*")
+        .eq("id", id_estabelecimento)
+        .single();
+
+      const ok = await deleteEstablishment(estab);
+      if (!ok) throw new Error("Falha ao excluir estabelecimento.");
+
+      await supabase
+        .from("estabelecimento_solicitacoes")
+        .update({
+          status: "aprovado",
+          resposta_admin: "Exclusão aprovada e realizada.",
+          data_resposta: new Date(),
+        })
+        .eq("id", id_solicitacao);
+
+      Alert.alert("Sucesso", "Solicitação de exclusão aprovada.");
+      return true;
+    }
+    const { data: estab, error: estErr } = await supabase
+      .from("estabelecimentos")
+      .select("*")
+      .eq("id", id_estabelecimento)
+      .single();
+
+    if (estErr) throw estErr;
+
+    let dataToUpdate = { ...alteracoes };
+
+    if (alteracoes.url_foto_nova) {
+      const novaFoto = alteracoes.url_foto_nova;
+
+      if (estab.url_foto) {
+        const path = estab.url_foto.replace(/^.+\/object\/public\//, "");
+        await supabase.storage
+          .from("fotos_estabelecimentos")
+          .remove([path]);
+      }
+
+      const fileExt = "jpg";
+      const fileName = `${id_estabelecimento}-${Date.now()}.${fileExt}`;
+      const filePath = `estabelecimentos/${fileName}`;
+
+      const base64 = novaFoto.base64;
+
+      const { error: uploadError } = await supabase.storage
+        .from("fotos_estabelecimentos")
+        .upload(filePath, decode(base64), {
+          contentType: "image/jpeg",
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from("fotos_estabelecimentos")
+        .getPublicUrl(filePath);
+
+      const publicUrl = urlData.publicUrl;
+
+      dataToUpdate.url_foto = publicUrl;
+
+      delete dataToUpdate.url_foto_nova;
+    }
+
+    const { error: updateErr } = await supabase
+      .from("estabelecimentos")
+      .update(dataToUpdate)
+      .eq("id", id_estabelecimento);
+
+    if (updateErr) throw updateErr;
+    
+    await supabase
+      .from("estabelecimento_solicitacoes")
+      .update({
+        status: "aprovado",
+        resposta_admin: "Alterações aplicadas com sucesso.",
+        data_resposta: new Date(),
+      })
+      .eq("id", id_solicitacao);
+
+    Alert.alert("Sucesso", "Solicitação de edição aprovada!");
+    return true;
+
+  } catch (err) {
+    Alert.alert("Erro", err.message);
+    return false;
+
+  } finally {
+    setLoadingAuth(false);
+  }
+}
+
+
+
+  async function rejeitarSolicitacao(id_solicitacao, justificativaAdmin) {
+    try {
+      setLoadingAuth(true);
+
+      const { error } = await supabase
+        .from("estabelecimento_solicitacoes")
+        .update({
+          status: "rejeitado",
+          resposta_admin: justificativaAdmin,
+          data_resposta: new Date()
+        })
+        .eq("id", id_solicitacao);
+
+      if (error) throw error;
+
+      Alert.alert("Rejeitado", "Solicitação rejeitada com sucesso.");
+      return true;
+
+    } catch (err) {
+      Alert.alert("Erro", err.message);
+      return false;
+
+    } finally {
+      setLoadingAuth(false);
+    }
+  }
+
   return (
     <AppContext.Provider
       value={{
@@ -449,6 +694,15 @@ export default function AppProvider({ children }) {
         banUser,
         unbanUser,
         deleteEstablishment,
+
+        solicitarEdicao,
+        solicitarExclusao,
+
+        listarSolicitacoesUsuario,
+        listarSolicitacoesAdmin,
+
+        aprovarSolicitacao,
+        rejeitarSolicitacao,
       }}
     >
       {children}

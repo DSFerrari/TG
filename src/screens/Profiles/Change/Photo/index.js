@@ -46,7 +46,6 @@ export default function Photo({ navigation }) {
       setSelectedImage(result.assets[0]);
     }
   }catch (error) {
-      console.log('Erro ao selecionar imagem:', error);
       Alert.alert('Erro', 'Não foi possível acessar a galeria');
     }
 };
@@ -76,7 +75,6 @@ export default function Photo({ navigation }) {
       setSelectedImage(result.assets[0]);
     }
   } catch (error) {
-      console.log('Erro ao tirar foto:', error);
       Alert.alert('Erro', 'Não foi possível acessar a câmera');
     }
   };

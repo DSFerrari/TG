@@ -50,7 +50,7 @@ export default function UsersAdmin() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.COLORS.WHITE1 }}>
+    <View style={{ flex: 1, backgroundColor: theme.COLORS.WHITE3 }}>
       <FlatList
         data={users}
         keyExtractor={(item) => item.id}
@@ -59,7 +59,7 @@ export default function UsersAdmin() {
             style={{
               margin: 10,
               padding: 15,
-              backgroundColor: "#fff",
+              backgroundColor: theme.COLORS.WHITE1,
               borderRadius: 10,
               shadowColor: "#000",
               shadowOpacity: 0.1,
@@ -78,7 +78,7 @@ export default function UsersAdmin() {
                 <TouchableOpacity
                   onPress={() => handleMakeAdmin(item.id, !item.is_admin)}
                   style={{
-                    backgroundColor: item.is_admin ? theme.COLORS.GRAY2 : theme.COLORS.BLUE1,
+                    backgroundColor: item.is_admin ? theme.COLORS.RED3 : theme.COLORS.BLUE1,
                     padding: 8,
                     borderRadius: 8,
                   }}

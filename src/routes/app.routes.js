@@ -159,6 +159,8 @@ export default function AuthTab() {
           headerShown: false,
           headerTitle: "Administração",
           headerTintColor: theme.COLORS.WHITE3,
+          headerBackTitleVisible: false,
+        headerBackTitle: '', 
           headerStyle: { backgroundColor: theme.COLORS.BLUE1 },
            tabBarIcon: () => (
             <MaterialCommunityIcons
@@ -177,7 +179,7 @@ export default function AuthTab() {
               e.preventDefault();
              navigation.reset({
                 index: 0,
-                routes: [{ name: "Administração"}],
+                routes: [{ name: "AdminHome"}],
               });
             }
           },

@@ -6,5 +6,13 @@ export const styles = StyleSheet.create({
         flex:1,
         backgroundColor: theme.COLORS.WHITE3,
         paddingHorizontal:24
-}
+},
+ empty: { textAlign: "center",
+     marginTop: 40, 
+     color: "#999" },
+      center:{ 
+    flex: 1, 
+    alignItems: "center", 
+    justifyContent: "center" 
+},
 });

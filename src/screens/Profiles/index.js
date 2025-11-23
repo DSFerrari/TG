@@ -64,7 +64,8 @@ export default function ProfileScreen({ route }) {
         )}
 
         <ButtonMAI
-        name="Minhas Avaliações"
+        name="Minhas Solicitações"
+        onPress={()=> stack.navigate("MinhasSolicitacoes")}
         />
 
         <ButtonMAI

@@ -86,7 +86,7 @@ export default function EstabsAdmin() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.COLORS.WHITE1 }}>
+    <View style={{ flex: 1, backgroundColor: theme.COLORS.WHITE3 }}>
       <FlatList
         data={estabs}
         keyExtractor={(item) => item.id.toString()}

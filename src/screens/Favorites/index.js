@@ -167,7 +167,6 @@ export default function Favorites() {
       }
     }
 
-    // Ordena por distância
     if (userLocation) {
       lista.sort((a, b) => calcDist(a) - calcDist(b));
     }
@@ -252,7 +251,6 @@ export default function Favorites() {
                   onToggleFavorite={async () => {
                     await toggleFavorite(item.id);
 
-                    // Remove imediatamente
                     setFavoritos((prev) => prev.filter((f) => f.id !== item.id));
                     setFiltrados((prev) => prev.filter((f) => f.id !== item.id));
                   }}

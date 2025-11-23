@@ -100,30 +100,33 @@ export default function CardMAI({
           {categoria}
         </Text>
 
-        <View
+         <View
           style={styles.starsContainer}
           accessibilityLabel={altAvaliacao}
         >
-          {Array.from({ length: 5 }).map((_, i) => {
-            const filled = i + 1 <= Math.floor(avaliacao);
-            const half = i + 0.5 === avaliacao;
+          {(() => {
+            const rounded = Math.round((avaliacao || 0) * 2) / 2; // arredonda para 0.5 mais próximo
+            const fullCount = Math.floor(rounded);
+            const hasHalf = rounded - fullCount === 0.5;
 
-            let iconName = 'star-outline';
-            if (filled) iconName = 'star';
-            else if (half) iconName = 'star-half';
+            return Array.from({ length: 5 }).map((_, i) => {
+              let iconName = 'star-outline';
+              if (i < fullCount) iconName = 'star';
+              else if (i === fullCount && hasHalf) iconName = 'star-half';
 
-            return (
-              <Ionicons
-                key={i}
-                name={iconName}
-                size={18}
-                color={theme.COLORS.YELLOW2}
-                style={{ marginRight: 2 }}
-                accessibilityElementsHidden={true}
-                importantForAccessibility="no"
-              />
-            );
-          })}
+              return (
+                <Ionicons
+                  key={i}
+                  name={iconName}
+                  size={18}
+                  color={theme.COLORS.YELLOW2}
+                  style={{ marginRight: 2 }}
+                  accessibilityElementsHidden={true}
+                  importantForAccessibility="no"
+                />
+              );
+            });
+          })()}
         </View>
       </View>
     </TouchableOpacity>

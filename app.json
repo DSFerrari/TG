@@ -12,27 +12,39 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Precisamos da sua localização para mostrar estabelecimentos próximos.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "A sua localização é usada para melhorar as recomendações enquanto você usa o app."
+      }
     },
+
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
     },
+
     "web": {
       "favicon": "./assets/favicon.png"
     },
+
     "plugins": [
       [
-      "expo-image-picker",
-      {
-        "photosPermission": "A aplicação acessa suas fotos para permitir que você escolha uma imagem de perfil.",
+        "expo-image-picker",
+        {
+          "photosPermission": "A aplicação acessa suas fotos para permitir que você escolha uma imagem de perfil.",
           "cameraPermission": "A aplicação acessa sua câmera para permitir que você tire uma foto de perfil."
-      }
+        }
+      ]
     ]
-  ]
   }
 }
