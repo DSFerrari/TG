@@ -133,8 +133,8 @@ export default function AppProvider({ children }) {
 
         if (error) throw error;
 
-        setFavoriteIds((prevSet) => {
-          const newSet = new Set(prevSet);
+        setFavoriteIds((prev) => {
+          const newSet = new Set(prev);
           newSet.delete(establishmentId);
           return newSet;
         });
@@ -142,125 +142,21 @@ export default function AppProvider({ children }) {
       } else {
         const { error } = await supabase
           .from("favoritos")
-          .insert({ id_usuario: userId, id_estabelecimento: establishmentId });
+          .insert({
+            id_usuario: userId,
+            id_estabelecimento: establishmentId
+          });
 
         if (error) throw error;
 
-        setFavoriteIds((prevSet) => {
-          const newSet = new Set(prevSet);
+        setFavoriteIds((prev) => {
+          const newSet = new Set(prev);
           newSet.add(establishmentId);
           return newSet;
         });
       }
     } catch (err) {
-      Alert.alert("Erro", "Não foi possível atualizar o favorito.");
-    }
-  }
-
-  async function getFavoriteEstablishments() {
-    if (!user) return [];
-
-    try {
-      setLoadingFavorites(true);
-
-      const { data: favRows, error: favErr } = await supabase
-        .from("favoritos")
-        .select("id_estabelecimento")
-        .eq("id_usuario", user.id);
-
-      if (favErr) throw favErr;
-      if (!favRows || favRows.length === 0) return [];
-
-      const ids = favRows.map((r) => r.id_estabelecimento);
-
-      const { data: estabs, error: estErr } = await supabase
-        .from("estabelecimentos_view")
-        .select("*")
-        .in("id", ids);
-
-      if (estErr) throw estErr;
-
-      return estabs || [];
-    } catch (err) {
-      Alert.alert("Erro ao carregar favoritos", err.message);
-      return [];
-    } finally {
-      setLoadingFavorites(false);
-    }
-  }
-
-  async function uploadEstablishmentImage(image, establishmentId, navigation) {
-    try {
-      setLoadingAuth(true);
-
-      const fileExt = image.uri.split(".").pop();
-      const fileName = `${establishmentId}-${Date.now()}.${fileExt}`;
-      const filePath = `estabelecimentos/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("fotos_estabelecimentos")
-        .upload(filePath, decode(image.base64), {
-          contentType: image.mimeType || "image/jpeg",
-        });
-
-      if (uploadError) throw uploadError;
-
-      const { data } = supabase.storage
-        .from("fotos_estabelecimentos")
-        .getPublicUrl(filePath);
-
-      const publicUrl = data.publicUrl;
-
-      const { error } = await supabase
-        .from("estabelecimentos")
-        .update({ url_foto: publicUrl })
-        .eq("id", establishmentId);
-
-      if (error) throw error;
-
-      Alert.alert("Sucesso", "Foto do estabelecimento atualizada!");
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      navigation.goBack();
-      return publicUrl;
-    } catch (err) {
-      Alert.alert("Erro no upload", err.message);
-      return null;
-    } finally {
-      setLoadingAuth(false);
-    }
-  }
-
-  async function createEstablishment(establishmentData) {
-    try {
-      setLoadingAuth(true);
-
-      if (!user) {
-        throw new Error("Usuário não autenticado.");
-      }
-
-      const dataToInsert = {
-        ...establishmentData,
-        id_usuario_criador: user.id,
-      };
-
-      const { data, error } = await supabase
-        .from("estabelecimentos")
-        .insert([dataToInsert])
-        .select();
-
-      if (error) throw error;
-
-      if (data && data.length > 0) {
-        Alert.alert("Sucesso!", "criação de estabelecimento enviada para aprovação do administrador.");
-        return data[0];
-      }
-
-      return null;
-    } catch (err) {
-      Alert.alert("Erro ao salvar", err.message);
-      return null;
-    } finally {
-      setLoadingAuth(false);
+      Alert.alert("Erro", err.message);
     }
   }
 
@@ -275,30 +171,14 @@ export default function AppProvider({ children }) {
         .order("id", { ascending: false });
 
       if (error) throw error;
+
       return data;
+
     } catch (err) {
       Alert.alert("Erro ao carregar", err.message);
       return [];
     } finally {
       setLoadingAuth(false);
-    }
-  }
-
-  async function getAvaliacoesByEstabelecimento(id_estabelecimento) {
-    try {
-      const { data, error } = await supabase
-        .from("avaliacoes_view")
-        .select(
-          "id, id_estabelecimento, id_usuario, nota, titulo, comentario, eh_anonimo, data_criacao, nome_usuario"
-        )
-        .eq("id_estabelecimento", id_estabelecimento)
-        .order("data_criacao", { ascending: false });
-
-      if (error) throw error;
-      return data || [];
-    } catch (err) {
-      Alert.alert("Erro", err.message || "Não foi possível carregar as avaliações.");
-      return [];
     }
   }
 
@@ -309,16 +189,18 @@ export default function AppProvider({ children }) {
     }
 
     try {
-      const { error } = await supabase.from("avaliacoes").insert([
-        {
-          id_estabelecimento,
-          id_usuario: user.id,
-          nota,
-          titulo,
-          comentario,
-          eh_anonimo,
-        },
-      ]);
+      const { error } = await supabase
+        .from("avaliacoes")
+        .insert([
+          {
+            id_estabelecimento,
+            id_usuario: user.id,
+            nota,
+            titulo,
+            comentario,
+            eh_anonimo,
+          }
+        ]);
 
       if (error) throw error;
 
@@ -326,85 +208,140 @@ export default function AppProvider({ children }) {
         id_estab: id_estabelecimento,
       });
 
-      Alert.alert("Sucesso!", "Avaliação publicada com sucesso!");
+      Alert.alert("Sucesso", "Avaliação criada com sucesso!");
       return true;
+
     } catch (err) {
-      Alert.alert("Erro", err.message || "Não foi possível publicar a avaliação.");
+      Alert.alert("Erro", err.message);
       return false;
     }
   }
 
-  async function makeUserAdmin(userId, isAdmin) {
+  async function solicitarEdicao(estabelecimentoId, alteracoes, justificativa, nomeEstabelecimento) {
+    if (!user) {
+      Alert.alert("Atenção", "Você precisa estar logado.");
+      return false;
+    }
+
     try {
+      setLoadingAuth(true);
+
       const { error } = await supabase
-        .from("profiles")
-        .update({ is_admin: isAdmin })
-        .eq("id", userId);
+        .from("estabelecimento_solicitacoes")
+        .insert([
+          {
+            id_estabelecimento: estabelecimentoId,
+            id_usuario: user.id,
+            tipo: "editar",
+            alteracoes,
+            justificativa,
+            nome_estabelecimento: nomeEstabelecimento,
+          }
+        ]);
 
       if (error) throw error;
 
-      Alert.alert(
-        "Sucesso",
-        isAdmin
-          ? "Usuário agora é administrador!"
-          : "Usuário deixou de ser administrador."
-      );
-
+      Alert.alert("Enviado!", "Sua solicitação foi enviada ao admin.");
       return true;
+
     } catch (err) {
-      Alert.alert("Erro", err.message || "Não foi possível atualizar o status.");
+      Alert.alert("Erro", err.message);
       return false;
+
+    } finally {
+      setLoadingAuth(false);
     }
   }
 
-  async function banUser(userId) {
+  async function solicitarExclusao(estabelecimentoId, justificativa, nomeEstabelecimento) {
+    if (!user) {
+      Alert.alert("Atenção", "Você precisa estar logado.");
+      return false;
+    }
+
     try {
+      setLoadingAuth(true);
+
       const { error } = await supabase
-        .from("profiles")
-        .update({ status: "banido" })
-        .eq("id", userId);
+        .from("estabelecimento_solicitacoes")
+        .insert([
+          {
+            id_estabelecimento: estabelecimentoId,
+            id_usuario: user.id,
+            tipo: "excluir",
+            justificativa,
+            nome_estabelecimento: nomeEstabelecimento,
+          }
+        ]);
 
       if (error) throw error;
 
-      Alert.alert("Sucesso", "Usuário banido!");
+      Alert.alert("Sucesso!", "Solicitação de exclusão enviada.");
       return true;
+
     } catch (err) {
-      Alert.alert("Erro", err.message || "Falha ao banir o usuário.");
+      Alert.alert("Erro", err.message);
       return false;
+    } finally {
+      setLoadingAuth(false);
     }
   }
 
-  async function unbanUser(userId) {
+  async function listarSolicitacoesUsuario() {
+    if (!user) return [];
+
     try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ status: "ativo" })
-        .eq("id", userId);
+      const { data, error } = await supabase
+        .from("estabelecimento_solicitacoes")
+        .select(`
+          *,
+          estabelecimentos:estabelecimentos!estabelecimento_solicitacoes_id_estabelecimento_fkey (nome)
+        `)
+        .eq("id_usuario", user.id)
+        .order("data_solicitacao", { ascending: false });
 
       if (error) throw error;
 
-      Alert.alert("Sucesso", "Usuário reativado!");
-      return true;
+      return data;
+
     } catch (err) {
-      Alert.alert("Erro", err.message || "Falha ao reativar o usuário.");
-      return false;
+      Alert.alert("Erro", err.message);
+      return [];
+    }
+  }
+
+  async function listarSolicitacoesAdmin() {
+    if (!userIsAdmin) return [];
+
+    try {
+      const { data, error } = await supabase
+        .from("estabelecimento_solicitacoes")
+        .select(`
+          *,
+          estabelecimentos:estabelecimentos!estabelecimento_solicitacoes_id_estabelecimento_fkey (nome)
+        `)
+        .order("data_solicitacao", { ascending: false });
+
+      if (error) throw error;
+
+      return data;
+
+    } catch (err) {
+      Alert.alert("Erro", err.message);
+      return [];
     }
   }
 
   async function deleteEstablishment(estab) {
     try {
-      if (!estab || !estab.url_foto) {
-        throw new Error("Estabelecimento inválido ou sem imagem.");
+      if (!estab) throw new Error("Estabelecimento inválido.");
+
+      if (estab.url_foto) {
+        const path = estab.url_foto.replace(/^.+\/object\/public\//, "");
+        await supabase.storage
+          .from("fotos_estabelecimentos")
+          .remove([path]);
       }
-
-      const path = estab.url_foto.replace(
-        /^.+\/object\/public\//,
-        ""
-      );
-
-      await supabase.storage
-        .from("fotos_estabelecimentos")
-        .remove([path]);
 
       await supabase
         .from("favoritos")
@@ -418,244 +355,141 @@ export default function AppProvider({ children }) {
 
       if (error) throw error;
 
-      Alert.alert("Rejeitado", "Estabelecimento removido com sucesso!");
       return true;
+
     } catch (err) {
-      Alert.alert("Erro", err.message || "Falha ao rejeitar estabelecimento.");
+      Alert.alert("Erro", err.message);
       return false;
     }
   }
 
-    async function solicitarEdicao(estabelecimentoId, alteracoes, justificativa, nomeEstabelecimento) {
-  if (!user) {
-    Alert.alert("Atenção", "Você precisa estar logado.");
-    return false;
-  }
-
-  try {
-    setLoadingAuth(true);
-
-    const { error } = await supabase
-      .from("estabelecimento_solicitacoes")
-      .insert([
-        {
-          id_estabelecimento: estabelecimentoId,
-          id_usuario: user.id,
-          tipo: "editar",
-          alteracoes,
-          justificativa,
-          nome_estabelecimento: nomeEstabelecimento,
-        }
-      ]);
-
-    if (error) throw error;
-
-    Alert.alert("Enviado!", "Sua solicitação de edição foi enviada para análise.");
-    return true;
-
-  } catch (err) {
-    Alert.alert("Erro", err.message || "Não foi possível enviar a solicitação.");
-    return false;
-
-  } finally {
-    setLoadingAuth(false);
-  }
-}
-
-
- async function solicitarExclusao(estabelecimentoId, justificativa, nomeEstabelecimento) {
-  if (!user) {
-    Alert.alert("Atenção", "Você precisa estar logado.");
-    return false;
-  }
-
-  try {
-    setLoadingAuth(true);
-
-    const { error } = await supabase
-      .from("estabelecimento_solicitacoes")
-      .insert([
-        {
-          id_estabelecimento: estabelecimentoId,
-          id_usuario: user.id,
-          tipo: "excluir",
-          justificativa,
-          nome_estabelecimento: nomeEstabelecimento,
-        }
-      ]);
-
-    if (error) throw error;
-
-    Alert.alert("Solicitação enviada", "A exclusão será analisada por um administrador.");
-    return true;
-
-  } catch (err) {
-    Alert.alert("Erro", err.message || "Não foi possível enviar a solicitação.");
-    return false;
-
-  } finally {
-    setLoadingAuth(false);
-  }
-}
-
-  async function listarSolicitacoesUsuario() {
-    if (!user) return [];
-
+  async function aprovarSolicitacao(id_solicitacao, id_estabelecimento, alteracoes) {
     try {
-      const { data, error } = await supabase
+      setLoadingAuth(true);
+
+      if (!id_solicitacao) throw new Error("ID da solicitação inválido.");
+      if (!id_estabelecimento) throw new Error("ID do estabelecimento inválido.");
+
+      const { data: solicitacao, error: solErr } = await supabase
         .from("estabelecimento_solicitacoes")
-        .select(`*, estabelecimentos(nome)`)
-        .eq("id_usuario", user.id)
-        .order("data_solicitacao", { ascending: false });
+        .select("*")
+        .eq("id", id_solicitacao)
+        .single();
 
-      if (error) throw error;
+      if (solErr) throw solErr;
 
-      return data;
-    } catch (err) {
-      Alert.alert("Erro", err.message);
-      return [];
-    }
-  }
+      if (solicitacao.tipo === "excluir") {
 
-  async function listarSolicitacoesAdmin() {
-    if (!userIsAdmin) return [];
+        const { data: estab } = await supabase
+          .from("estabelecimentos")
+          .select("*")
+          .eq("id", id_estabelecimento)
+          .single();
 
-    try {
-      const { data, error } = await supabase
-        .from("estabelecimento_solicitacoes")
-        .select(`*, estabelecimentos(nome)`)
-        .order("data_solicitacao", { ascending: false });
+        const ok = await deleteEstablishment(estab);
+        if (!ok) throw new Error("Falha ao excluir.");
 
-      if (error) throw error;
+        const { error: solUpdateErr } = await supabase
+          .from("estabelecimento_solicitacoes")
+          .update({
+            status: "aprovado",
+            resposta_admin: "Exclusão aprovada e realizada.",
+            data_resposta: new Date(),
+          })
+          .eq("id", id_solicitacao)
+          .select();
 
-      return data;
-    } catch (err) {
-      Alert.alert("Erro", err.message);
-      return [];
-    }
-  }
+        if (solUpdateErr) throw solUpdateErr;
 
-async function aprovarSolicitacao(id_solicitacao, id_estabelecimento, alteracoes) {
-  try {
-    setLoadingAuth(true);
+        Alert.alert("Sucesso", "Solicitação aprovada.");
+        return true;
+      }
 
-    const { data: solicitacao, error: solErr } = await supabase
-      .from("estabelecimento_solicitacoes")
-      .select("*")
-      .eq("id", id_solicitacao)
-      .single();
-
-    if (solErr) throw solErr;
-
-    if (solicitacao.tipo === "excluir") {
       const { data: estab } = await supabase
         .from("estabelecimentos")
         .select("*")
         .eq("id", id_estabelecimento)
         .single();
 
-      const ok = await deleteEstablishment(estab);
-      if (!ok) throw new Error("Falha ao excluir estabelecimento.");
+      let dataToUpdate = { ...alteracoes };
 
-      await supabase
+      if (alteracoes?.url_foto_nova) {
+        const novaFoto = alteracoes.url_foto_nova;
+
+        if (estab.url_foto) {
+          const path = estab.url_foto.replace(/^.+\/object\/public\//, "");
+          await supabase.storage
+            .from("fotos_estabelecimentos")
+            .remove([path]);
+        }
+
+        const fileName = `${id_estabelecimento}-${Date.now()}.jpg`;
+        const filePath = `estabelecimentos/${fileName}`;
+
+        const { error: uploadErr } = await supabase.storage
+          .from("fotos_estabelecimentos")
+          .upload(filePath, decode(novaFoto.base64), {
+            contentType: "image/jpeg",
+          });
+
+        if (uploadErr) throw uploadErr;
+
+        const { data: urlData } = supabase.storage
+          .from("fotos_estabelecimentos")
+          .getPublicUrl(filePath);
+
+        dataToUpdate.url_foto = urlData.publicUrl;
+
+        delete dataToUpdate.url_foto_nova;
+      }
+
+      const { error: estUpdateErr } = await supabase
+        .from("estabelecimentos")
+        .update(dataToUpdate)
+        .eq("id", id_estabelecimento)
+        .select();
+
+      if (estUpdateErr) throw estUpdateErr;
+
+      const { error: solUpdateError } = await supabase
         .from("estabelecimento_solicitacoes")
         .update({
           status: "aprovado",
-          resposta_admin: "Exclusão aprovada e realizada.",
+          resposta_admin: "Alterações aplicadas com sucesso.",
           data_resposta: new Date(),
         })
-        .eq("id", id_solicitacao);
+        .eq("id", id_solicitacao)
+        .select();
 
-      Alert.alert("Sucesso", "Solicitação de exclusão aprovada.");
+      if (solUpdateError) throw solUpdateError;
+
+      Alert.alert("Sucesso", "Solicitação aprovada!");
       return true;
+
+    } catch (err) {
+      Alert.alert("Erro", err.message);
+      return false;
+
+    } finally {
+      setLoadingAuth(false);
     }
-    const { data: estab, error: estErr } = await supabase
-      .from("estabelecimentos")
-      .select("*")
-      .eq("id", id_estabelecimento)
-      .single();
-
-    if (estErr) throw estErr;
-
-    let dataToUpdate = { ...alteracoes };
-
-    if (alteracoes.url_foto_nova) {
-      const novaFoto = alteracoes.url_foto_nova;
-
-      if (estab.url_foto) {
-        const path = estab.url_foto.replace(/^.+\/object\/public\//, "");
-        await supabase.storage
-          .from("fotos_estabelecimentos")
-          .remove([path]);
-      }
-
-      const fileExt = "jpg";
-      const fileName = `${id_estabelecimento}-${Date.now()}.${fileExt}`;
-      const filePath = `estabelecimentos/${fileName}`;
-
-      const base64 = novaFoto.base64;
-
-      const { error: uploadError } = await supabase.storage
-        .from("fotos_estabelecimentos")
-        .upload(filePath, decode(base64), {
-          contentType: "image/jpeg",
-        });
-
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage
-        .from("fotos_estabelecimentos")
-        .getPublicUrl(filePath);
-
-      const publicUrl = urlData.publicUrl;
-
-      dataToUpdate.url_foto = publicUrl;
-
-      delete dataToUpdate.url_foto_nova;
-    }
-
-    const { error: updateErr } = await supabase
-      .from("estabelecimentos")
-      .update(dataToUpdate)
-      .eq("id", id_estabelecimento);
-
-    if (updateErr) throw updateErr;
-    
-    await supabase
-      .from("estabelecimento_solicitacoes")
-      .update({
-        status: "aprovado",
-        resposta_admin: "Alterações aplicadas com sucesso.",
-        data_resposta: new Date(),
-      })
-      .eq("id", id_solicitacao);
-
-    Alert.alert("Sucesso", "Solicitação de edição aprovada!");
-    return true;
-
-  } catch (err) {
-    Alert.alert("Erro", err.message);
-    return false;
-
-  } finally {
-    setLoadingAuth(false);
   }
-}
-
-
 
   async function rejeitarSolicitacao(id_solicitacao, justificativaAdmin) {
     try {
       setLoadingAuth(true);
+
+      if (!id_solicitacao) throw new Error("ID inválido.");
 
       const { error } = await supabase
         .from("estabelecimento_solicitacoes")
         .update({
           status: "rejeitado",
           resposta_admin: justificativaAdmin,
-          data_resposta: new Date()
+          data_resposta: new Date(),
         })
-        .eq("id", id_solicitacao);
+        .eq("id", id_solicitacao)
+        .select();
 
       if (error) throw error;
 
@@ -676,24 +510,14 @@ async function aprovarSolicitacao(id_solicitacao, id_estabelecimento, alteracoes
       value={{
         loadingAuth,
         user,
+        profile,
+        userIsAdmin,
 
-        uploadEstablishmentImage,
-        createEstablishment,
+        toggleFavorite,
+        favoriteIds,
         getEstablishments,
 
-        loadingFavorites,
-        favoriteIds,
-        toggleFavorite,
-        getFavoriteEstablishments,
-
-        getAvaliacoesByEstabelecimento,
         createAvaliacao,
-
-        userIsAdmin,
-        makeUserAdmin,
-        banUser,
-        unbanUser,
-        deleteEstablishment,
 
         solicitarEdicao,
         solicitarExclusao,

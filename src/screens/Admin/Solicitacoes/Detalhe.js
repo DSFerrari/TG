@@ -32,12 +32,17 @@ export default function AdminDetalheSolicitacao({ route, navigation }) {
   }, []);
 
   async function aceitar() {
+    try{
     const ok = await aprovarSolicitacao(
       solicitacao.id,
       solicitacao.id_estabelecimento,
       solicitacao.alteracoes
     );
     if (ok) navigation.goBack();
+  } catch (error) {
+    console.log(error);
+    Alert.alert("Erro ao aprovar solicitação", error.message);
+  }
   }
 
   async function rejeitar() {
@@ -45,9 +50,13 @@ export default function AdminDetalheSolicitacao({ route, navigation }) {
       Alert.alert("Justifique a rejeição");
       return;
     }
-
-    const ok = await rejeitarSolicitacao(solicitacao.id, motivoRejeicao);
-    if (ok) navigation.goBack();
+    try{
+      const ok = await rejeitarSolicitacao(solicitacao.id, motivoRejeicao);
+      if (ok) navigation.goBack();
+    } catch (error) {
+      console.log(error);
+      Alert.alert("Erro ao rejeitar solicitação", error.message);
+    }
   }
 
   function renderAlteracoes() {

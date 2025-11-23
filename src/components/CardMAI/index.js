@@ -105,7 +105,7 @@ export default function CardMAI({
           accessibilityLabel={altAvaliacao}
         >
           {(() => {
-            const rounded = Math.round((avaliacao || 0) * 2) / 2; // arredonda para 0.5 mais próximo
+            const rounded = Math.round((avaliacao || 0) * 2) / 2;
             const fullCount = Math.floor(rounded);
             const hasHalf = rounded - fullCount === 0.5;
 
