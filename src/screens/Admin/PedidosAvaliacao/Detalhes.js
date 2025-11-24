@@ -15,6 +15,7 @@ export default function DetalhesPedido({ route, navigation }) {
       .eq("id", pedido.id);
 
     if (error) {
+      console.log("ERRO UPDATE PEDIDO:", error);
       Alert.alert("Erro ao atualizar status");
       return;
     }

@@ -7,13 +7,14 @@ export const AppContext = createContext({});
 
 export default function AppProvider({ children }) {
   const [loadingAuth, setLoadingAuth] = useState(false);
-  const [user, setUser] = useState(null);
+  const [loadingFavorites, setLoadingFavorites] = useState(false);
 
+  const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [userIsAdmin, setUserIsAdmin] = useState(false);
 
-  const [loadingFavorites, setLoadingFavorites] = useState(false);
   const [favoriteIds, setFavoriteIds] = useState(new Set());
+
 
   async function fetchProfile(userId) {
     if (!userId) return null;
@@ -39,24 +40,23 @@ export default function AppProvider({ children }) {
         setProfile(newProfile);
         setUserIsAdmin(false);
         return newProfile;
-
-      } else {
-        setProfile(data);
-        setUserIsAdmin(data.is_admin === true && data.status !== "banido");
-        return data;
       }
 
+      setProfile(data);
+      setUserIsAdmin(data.is_admin === true && data.status !== "banido");
+      return data;
+
     } catch (err) {
-      console.error("Erro ao buscar perfil:", err);
+      console.log("Erro ao buscar perfil:", err);
       return null;
     }
   }
 
-  async function fetchUserFavorites(userId) {
-    if (!userId) return;
 
+  async function fetchUserFavorites(userId) {
     try {
       setLoadingFavorites(true);
+
       const { data, error } = await supabase
         .from("favoritos")
         .select("id_estabelecimento")
@@ -66,8 +66,9 @@ export default function AppProvider({ children }) {
 
       const idSet = new Set(data.map((fav) => fav.id_estabelecimento));
       setFavoriteIds(idSet);
+
     } catch (err) {
-      Alert.alert("Erro ao carregar seus favoritos", err.message);
+      Alert.alert("Erro ao carregar favoritos", err.message);
     } finally {
       setLoadingFavorites(false);
     }
@@ -79,6 +80,7 @@ export default function AppProvider({ children }) {
 
       if (session?.user) {
         await fetchUserFavorites(session.user.id);
+
         const p = await fetchProfile(session.user.id);
 
         if (p?.status === "banido") {
@@ -99,12 +101,11 @@ export default function AppProvider({ children }) {
           if (p?.status === "banido") {
             await supabase.auth.signOut();
             Alert.alert("Acesso bloqueado", "Seu usuário foi banido.");
-            return;
           }
-
         } else {
           setFavoriteIds(new Set());
           setUserIsAdmin(false);
+          setProfile(null);
         }
       }
     );
@@ -116,15 +117,14 @@ export default function AppProvider({ children }) {
 
   async function toggleFavorite(establishmentId) {
     if (!user) {
-      Alert.alert("Atenção", "Você precisa estar logado para favoritar.");
-      return;
+      return Alert.alert("Atenção", "É necessário estar logado.");
     }
 
     const userId = user.id;
-    const isCurrentlyFavorite = favoriteIds.has(establishmentId);
+    const isFavorite = favoriteIds.has(establishmentId);
 
     try {
-      if (isCurrentlyFavorite) {
+      if (isFavorite) {
         const { error } = await supabase
           .from("favoritos")
           .delete()
@@ -133,74 +133,91 @@ export default function AppProvider({ children }) {
 
         if (error) throw error;
 
-        setFavoriteIds((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(establishmentId);
-          return newSet;
-        });
+        const newSet = new Set(favoriteIds);
+        newSet.delete(establishmentId);
+        setFavoriteIds(newSet);
 
       } else {
         const { error } = await supabase
           .from("favoritos")
-          .insert({
-            id_usuario: userId,
-            id_estabelecimento: establishmentId
-          });
+          .insert({ id_usuario: userId, id_estabelecimento: establishmentId });
 
         if (error) throw error;
 
-        setFavoriteIds((prev) => {
-          const newSet = new Set(prev);
-          newSet.add(establishmentId);
-          return newSet;
-        });
+        const newSet = new Set(favoriteIds);
+        newSet.add(establishmentId);
+        setFavoriteIds(newSet);
       }
+
     } catch (err) {
       Alert.alert("Erro", err.message);
     }
   }
 
-  async function getEstablishments() {
-    try {
-      setLoadingAuth(true);
+  async function getFavoriteEstablishments() {
+    if (!user) return [];
 
-      const { data, error } = await supabase
+    try {
+      setLoadingFavorites(true);
+
+      const { data: favRows } = await supabase
+        .from("favoritos")
+        .select("id_estabelecimento")
+        .eq("id_usuario", user.id);
+
+      const ids = favRows.map((r) => r.id_estabelecimento);
+      if (ids.length === 0) return [];
+
+      const { data } = await supabase
         .from("estabelecimentos_view")
         .select("*")
-        .eq("status", "aprovado")
-        .order("id", { ascending: false });
+        .in("id", ids);
+
+      return data;
+
+    } catch (err) {
+      Alert.alert("Erro", err.message);
+      return [];
+
+    } finally {
+      setLoadingFavorites(false);
+    }
+  }
+
+  async function getAvaliacoesByEstabelecimento(id_estabelecimento) {
+    try {
+      const { data, error } = await supabase
+        .from("avaliacoes_view")
+        .select("*")
+        .eq("id_estabelecimento", id_estabelecimento)
+        .order("data_criacao", { ascending: false });
 
       if (error) throw error;
 
       return data;
 
     } catch (err) {
-      Alert.alert("Erro ao carregar", err.message);
+      Alert.alert("Erro", err.message);
       return [];
-    } finally {
-      setLoadingAuth(false);
     }
   }
 
   async function createAvaliacao({ id_estabelecimento, nota, titulo, comentario, eh_anonimo }) {
     if (!user) {
-      Alert.alert("Atenção", "Você precisa estar logado para avaliar.");
-      return false;
+      return Alert.alert("Atenção", "É necessário estar logado.");
     }
 
     try {
       const { error } = await supabase
         .from("avaliacoes")
-        .insert([
-          {
-            id_estabelecimento,
-            id_usuario: user.id,
-            nota,
-            titulo,
-            comentario,
-            eh_anonimo,
-          }
-        ]);
+        .insert({
+          id_estabelecimento,
+          id_usuario: user.id,
+          nota,
+          titulo,
+          comentario,
+          eh_anonimo,
+        });
 
       if (error) throw error;
 
@@ -208,7 +225,7 @@ export default function AppProvider({ children }) {
         id_estab: id_estabelecimento,
       });
 
-      Alert.alert("Sucesso", "Avaliação criada com sucesso!");
+      Alert.alert("Sucesso", "Avaliação publicada!");
       return true;
 
     } catch (err) {
@@ -217,118 +234,97 @@ export default function AppProvider({ children }) {
     }
   }
 
-  async function solicitarEdicao(estabelecimentoId, alteracoes, justificativa, nomeEstabelecimento) {
-    if (!user) {
-      Alert.alert("Atenção", "Você precisa estar logado.");
-      return false;
-    }
-
+  async function getEstablishments() {
     try {
       setLoadingAuth(true);
 
-      const { error } = await supabase
-        .from("estabelecimento_solicitacoes")
-        .insert([
-          {
-            id_estabelecimento: estabelecimentoId,
-            id_usuario: user.id,
-            tipo: "editar",
-            alteracoes,
-            justificativa,
-            nome_estabelecimento: nomeEstabelecimento,
-          }
-        ]);
+      const { data } = await supabase
+        .from("estabelecimentos_view")
+        .select("*")
+        .eq("status", "aprovado")
+        .order("id", { ascending: false });
 
-      if (error) throw error;
-
-      Alert.alert("Enviado!", "Sua solicitação foi enviada ao admin.");
-      return true;
+      return data;
 
     } catch (err) {
-      Alert.alert("Erro", err.message);
-      return false;
+      Alert.alert("Erro ao carregar", err.message);
+      return [];
 
     } finally {
       setLoadingAuth(false);
     }
   }
 
-  async function solicitarExclusao(estabelecimentoId, justificativa, nomeEstabelecimento) {
-    if (!user) {
-      Alert.alert("Atenção", "Você precisa estar logado.");
-      return false;
-    }
-
+  async function createEstablishment(establishmentData) {
     try {
       setLoadingAuth(true);
 
-      const { error } = await supabase
-        .from("estabelecimento_solicitacoes")
-        .insert([
-          {
-            id_estabelecimento: estabelecimentoId,
-            id_usuario: user.id,
-            tipo: "excluir",
-            justificativa,
-            nome_estabelecimento: nomeEstabelecimento,
-          }
-        ]);
+      if (!user) throw new Error("Usuário não autenticado.");
+
+      const payload = {
+        ...establishmentData,
+        id_usuario_criador: user.id,
+      };
+
+      const { data, error } = await supabase
+        .from("estabelecimentos")
+        .insert([payload])
+        .select();
 
       if (error) throw error;
 
-      Alert.alert("Sucesso!", "Solicitação de exclusão enviada.");
-      return true;
+      Alert.alert("Sucesso!", "Estabelecimento enviado para aprovação.");
+      return data[0];
 
     } catch (err) {
       Alert.alert("Erro", err.message);
-      return false;
+      return null;
+
     } finally {
       setLoadingAuth(false);
     }
   }
 
-  async function listarSolicitacoesUsuario() {
-    if (!user) return [];
-
+  async function uploadEstablishmentImage(image, establishmentId, navigation) {
     try {
-      const { data, error } = await supabase
-        .from("estabelecimento_solicitacoes")
-        .select(`
-          *,
-          estabelecimentos:estabelecimentos!estabelecimento_solicitacoes_id_estabelecimento_fkey (nome)
-        `)
-        .eq("id_usuario", user.id)
-        .order("data_solicitacao", { ascending: false });
+      setLoadingAuth(true);
+
+      const fileExt = image.uri.split(".").pop();
+      const fileName = `${establishmentId}-${Date.now()}.${fileExt}`;
+      const filePath = `estabelecimentos/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("fotos_estabelecimentos")
+        .upload(filePath, decode(image.base64), {
+          contentType: image.mimeType || "image/jpeg",
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from("fotos_estabelecimentos")
+        .getPublicUrl(filePath);
+
+      const publicUrl = data.publicUrl;
+
+      const { error } = await supabase
+        .from("estabelecimentos")
+        .update({ url_foto: publicUrl })
+        .eq("id", establishmentId);
 
       if (error) throw error;
 
-      return data;
+      Alert.alert("Sucesso", "Foto atualizada!");
+      navigation.goBack();
+
+      return publicUrl;
 
     } catch (err) {
       Alert.alert("Erro", err.message);
-      return [];
-    }
-  }
+      return null;
 
-  async function listarSolicitacoesAdmin() {
-    if (!userIsAdmin) return [];
-
-    try {
-      const { data, error } = await supabase
-        .from("estabelecimento_solicitacoes")
-        .select(`
-          *,
-          estabelecimentos:estabelecimentos!estabelecimento_solicitacoes_id_estabelecimento_fkey (nome)
-        `)
-        .order("data_solicitacao", { ascending: false });
-
-      if (error) throw error;
-
-      return data;
-
-    } catch (err) {
-      Alert.alert("Erro", err.message);
-      return [];
+    } finally {
+      setLoadingAuth(false);
     }
   }
 
@@ -363,23 +359,123 @@ export default function AppProvider({ children }) {
     }
   }
 
+
+  async function solicitarEdicao(estabelecimentoId, alteracoes, justificativa, nomeEstabelecimento) {
+    try {
+      setLoadingAuth(true);
+
+      if (!user) throw new Error("Usuário não autenticado.");
+
+      const { error } = await supabase
+        .from("estabelecimento_solicitacoes")
+        .insert({
+          id_estabelecimento: estabelecimentoId,
+          id_usuario: user.id,
+          tipo: "editar",
+          alteracoes,
+          justificativa,
+          nome_estabelecimento: nomeEstabelecimento,
+        });
+
+      if (error) throw error;
+
+      Alert.alert("Sucesso", "Sua solicitação foi enviada.");
+      return true;
+
+    } catch (err) {
+      Alert.alert("Erro", err.message);
+      return false;
+
+    } finally {
+      setLoadingAuth(false);
+    }
+  }
+
+  async function solicitarExclusao(estabelecimentoId, justificativa, nomeEstabelecimento) {
+    try {
+      setLoadingAuth(true);
+
+      if (!user) throw new Error("Usuário não autenticado.");
+
+      const { error } = await supabase
+        .from("estabelecimento_solicitacoes")
+        .insert({
+          id_estabelecimento: estabelecimentoId,
+          id_usuario: user.id,
+          tipo: "excluir",
+          justificativa,
+          nome_estabelecimento: nomeEstabelecimento,
+        });
+
+      if (error) throw error;
+
+      Alert.alert("Sucesso", "Solicitação enviada para análise.");
+      return true;
+
+    } catch (err) {
+      Alert.alert("Erro", err.message);
+      return false;
+
+    } finally {
+      setLoadingAuth(false);
+    }
+  }
+
+  async function listarSolicitacoesUsuario() {
+    if (!user) return [];
+
+    try {
+      const { data } = await supabase
+        .from("estabelecimento_solicitacoes")
+        .select(`
+          *,
+          estabelecimentos:estabelecimentos!estabelecimento_solicitacoes_id_estabelecimento_fkey (nome)
+        `)
+        .eq("id_usuario", user.id)
+        .order("data_solicitacao", { ascending: false });
+
+      return data;
+
+    } catch (err) {
+      Alert.alert("Erro", err.message);
+      return [];
+    }
+  }
+
+  async function listarSolicitacoesAdmin() {
+    if (!userIsAdmin) return [];
+
+    try {
+      const { data } = await supabase
+        .from("estabelecimento_solicitacoes")
+        .select(`
+          *,
+          estabelecimentos:estabelecimentos!estabelecimento_solicitacoes_id_estabelecimento_fkey (nome)
+        `)
+        .order("data_solicitacao", { ascending: false });
+
+      return data;
+
+    } catch (err) {
+      Alert.alert("Erro", err.message);
+      return [];
+    }
+  }
+
   async function aprovarSolicitacao(id_solicitacao, id_estabelecimento, alteracoes) {
     try {
       setLoadingAuth(true);
 
-      if (!id_solicitacao) throw new Error("ID da solicitação inválido.");
-      if (!id_estabelecimento) throw new Error("ID do estabelecimento inválido.");
+      if (!id_solicitacao) throw new Error("ID inválido.");
+      if (!id_estabelecimento) throw new Error("Estabelecimento inválido.");
 
-      const { data: solicitacao, error: solErr } = await supabase
+      const { data: solicitacao } = await supabase
         .from("estabelecimento_solicitacoes")
         .select("*")
         .eq("id", id_solicitacao)
         .single();
 
-      if (solErr) throw solErr;
-
       if (solicitacao.tipo === "excluir") {
-
         const { data: estab } = await supabase
           .from("estabelecimentos")
           .select("*")
@@ -387,19 +483,17 @@ export default function AppProvider({ children }) {
           .single();
 
         const ok = await deleteEstablishment(estab);
-        if (!ok) throw new Error("Falha ao excluir.");
+        if (!ok) throw new Error("Erro ao excluir.");
 
-        const { error: solUpdateErr } = await supabase
+        await supabase
           .from("estabelecimento_solicitacoes")
           .update({
             status: "aprovado",
-            resposta_admin: "Exclusão aprovada e realizada.",
+            resposta_admin: "Exclusão realizada.",
             data_resposta: new Date(),
           })
           .eq("id", id_solicitacao)
           .select();
-
-        if (solUpdateErr) throw solUpdateErr;
 
         Alert.alert("Sucesso", "Solicitação aprovada.");
         return true;
@@ -411,11 +505,9 @@ export default function AppProvider({ children }) {
         .eq("id", id_estabelecimento)
         .single();
 
-      let dataToUpdate = { ...alteracoes };
+      let updates = { ...alteracoes };
 
       if (alteracoes?.url_foto_nova) {
-        const novaFoto = alteracoes.url_foto_nova;
-
         if (estab.url_foto) {
           const path = estab.url_foto.replace(/^.+\/object\/public\//, "");
           await supabase.storage
@@ -426,42 +518,38 @@ export default function AppProvider({ children }) {
         const fileName = `${id_estabelecimento}-${Date.now()}.jpg`;
         const filePath = `estabelecimentos/${fileName}`;
 
-        const { error: uploadErr } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from("fotos_estabelecimentos")
-          .upload(filePath, decode(novaFoto.base64), {
+          .upload(filePath, decode(alteracoes.url_foto_nova.base64), {
             contentType: "image/jpeg",
           });
 
-        if (uploadErr) throw uploadErr;
+        if (uploadError) throw uploadError;
 
         const { data: urlData } = supabase.storage
           .from("fotos_estabelecimentos")
           .getPublicUrl(filePath);
 
-        dataToUpdate.url_foto = urlData.publicUrl;
+        updates.url_foto = urlData.publicUrl;
 
-        delete dataToUpdate.url_foto_nova;
+        delete updates.url_foto_nova;
       }
 
-      const { error: estUpdateErr } = await supabase
+      await supabase
         .from("estabelecimentos")
-        .update(dataToUpdate)
+        .update(updates)
         .eq("id", id_estabelecimento)
         .select();
 
-      if (estUpdateErr) throw estUpdateErr;
-
-      const { error: solUpdateError } = await supabase
+      await supabase
         .from("estabelecimento_solicitacoes")
         .update({
           status: "aprovado",
-          resposta_admin: "Alterações aplicadas com sucesso.",
+          resposta_admin: "Alterações aplicadas.",
           data_resposta: new Date(),
         })
         .eq("id", id_solicitacao)
         .select();
-
-      if (solUpdateError) throw solUpdateError;
 
       Alert.alert("Sucesso", "Solicitação aprovada!");
       return true;
@@ -479,8 +567,6 @@ export default function AppProvider({ children }) {
     try {
       setLoadingAuth(true);
 
-      if (!id_solicitacao) throw new Error("ID inválido.");
-
       const { error } = await supabase
         .from("estabelecimento_solicitacoes")
         .update({
@@ -493,7 +579,7 @@ export default function AppProvider({ children }) {
 
       if (error) throw error;
 
-      Alert.alert("Rejeitado", "Solicitação rejeitada com sucesso.");
+      Alert.alert("Sucesso", "Solicitação rejeitada.");
       return true;
 
     } catch (err) {
@@ -505,28 +591,98 @@ export default function AppProvider({ children }) {
     }
   }
 
+  async function makeUserAdmin(userId, isAdmin) {
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ is_admin: isAdmin })
+        .eq("id", userId);
+
+      if (error) throw error;
+
+      Alert.alert("Sucesso", "Admin atualizado.");
+      return true;
+
+    } catch (err) {
+      Alert.alert("Erro", err.message);
+      return false;
+    }
+  }
+
+  async function banUser(userId) {
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ status: "banido" })
+        .eq("id", userId);
+
+      if (error) throw error;
+
+      Alert.alert("Sucesso", "Usuário banido!");
+      return true;
+
+    } catch (err) {
+      Alert.alert("Erro", err.message);
+      return false;
+    }
+  }
+
+  async function unbanUser(userId) {
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ status: "ativo" })
+        .eq("id", userId);
+
+      if (error) throw error;
+
+      Alert.alert("Sucesso", "Usuário desbanido!");
+      return true;
+
+    } catch (err) {
+      Alert.alert("Erro", err.message);
+      return false;
+    }
+  }
+
+
   return (
     <AppContext.Provider
       value={{
         loadingAuth,
+        loadingFavorites,
+
         user,
         profile,
         userIsAdmin,
 
-        toggleFavorite,
+        // FAVORITOS
         favoriteIds,
-        getEstablishments,
+        toggleFavorite,
+        getFavoriteEstablishments,
 
+        // AVALIAÇÕES
+        getAvaliacoesByEstabelecimento,
         createAvaliacao,
 
+        // ESTABELECIMENTOS
+        getEstablishments,
+        createEstablishment,
+        uploadEstablishmentImage,
+        deleteEstablishment,
+
+        // SOLICITAÇÕES
         solicitarEdicao,
         solicitarExclusao,
-
         listarSolicitacoesUsuario,
         listarSolicitacoesAdmin,
-
         aprovarSolicitacao,
         rejeitarSolicitacao,
+
+        // ADMIN
+        makeUserAdmin,
+        banUser,
+        unbanUser,
       }}
     >
       {children}
