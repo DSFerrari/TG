@@ -27,5 +27,31 @@ chipTextActive: {
   color: "#fff",
   fontWeight: "600",
 },
+dropdownContainer: {
+    backgroundColor: '#fff',
+    marginHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    marginTop: 5,
+    maxHeight: 200,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  dropdownItem: {
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  dropdownText: {
+    fontSize: 16,
+    color: theme.COLORS.BLACK1,
+  },
 
 });

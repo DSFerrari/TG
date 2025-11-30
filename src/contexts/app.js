@@ -2,6 +2,7 @@ import { createContext, useState, useEffect } from "react";
 import { supabase } from "../services/supabase";
 import { Alert } from "react-native";
 import { decode } from "base64-arraybuffer";
+import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
 
 export const AppContext = createContext({});
 
@@ -14,6 +15,9 @@ export default function AppProvider({ children }) {
   const [userIsAdmin, setUserIsAdmin] = useState(false);
 
   const [favoriteIds, setFavoriteIds] = useState(new Set());
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedEstab, setSelectedEstab] = useState(null);
 
 
   async function fetchProfile(userId) {
@@ -627,6 +631,29 @@ export default function AppProvider({ children }) {
     }
   }
 
+  async function deleteAvaliacao(idAvaliacao) {
+    if (!user) {
+      Alert.alert("Atenção", "É necessário estar logado.");
+      return false;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("avaliacoes")
+        .delete()
+        .eq("id", idAvaliacao)
+        .eq("id_usuario", user.id);
+
+      if (error) throw error;
+
+      return true;
+
+    } catch (err) {
+      Alert.alert("Erro ao excluir", err.message);
+      return false;
+    }
+  }
+
   async function unbanUser(userId) {
     try {
       const { error } = await supabase
@@ -645,7 +672,28 @@ export default function AppProvider({ children }) {
     }
   }
 
+async function getMyEstablishments() {
+  if (!user) return [];
 
+  try {
+    setLoadingAuth(true);
+    
+    const { data, error } = await supabase
+      .from("estabelecimentos")
+      .select("*")
+      .eq("id_usuario_criador", user.id)
+      .order("data_criacao", { ascending: false }); 
+
+    if (error) throw error;
+
+    return data;
+  } catch (err) {
+    Alert.alert("Erro", err.message);
+    return [];
+  } finally {
+    setLoadingAuth(false);
+  }
+}
   return (
     <AppContext.Provider
       value={{
@@ -664,12 +712,14 @@ export default function AppProvider({ children }) {
         // AVALIAÇÕES
         getAvaliacoesByEstabelecimento,
         createAvaliacao,
+        deleteAvaliacao,
 
         // ESTABELECIMENTOS
         getEstablishments,
         createEstablishment,
         uploadEstablishmentImage,
         deleteEstablishment,
+        getMyEstablishments,
 
         // SOLICITAÇÕES
         solicitarEdicao,

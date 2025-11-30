@@ -7,10 +7,11 @@ import {
   Alert,
   FlatList,
   TouchableOpacity,
-  Text
+  Text,
+
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
 
@@ -29,7 +30,12 @@ import { styles } from './styles';
 export default function CadastrarEstabelecimento() {
   const [acessibilidade, setAcessibilidade] = useState([]);
   const [image, setImage] = useState(null);
+  
   const [categoria, setCategoria] = useState(null);
+  const [searchCategoria, setSearchCategoria] = useState('');
+  const [filteredCategories, setFilteredCategories] = useState([]);
+  const [showCategoryList, setShowCategoryList] = useState(false);
+
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [estabelecimento, setEstabelecimento] = useState('');
   const [coords, setCoords] = useState(null);
@@ -48,9 +54,34 @@ export default function CadastrarEstabelecimento() {
     { id: "botao_salvar" },
   ];
 
+  const handleSearchCategory = (text) => {
+    setSearchCategoria(text);
+    setCategoria(null); 
+
+    if (text) {
+      const newData = categoryItems.filter((item) => {
+        const itemData = item.label ? item.label.toUpperCase() : ''.toUpperCase();
+        const textData = text.toUpperCase();
+        return itemData.indexOf(textData) > -1;
+      });
+      setFilteredCategories(newData);
+      setShowCategoryList(true);
+    } else {
+      setFilteredCategories([]);
+      setShowCategoryList(false);
+    }
+  };
+
+  const handleSelectCategory = async (item) => {
+    setCategoria(item.value);
+    setSearchCategoria(item.label);
+    setShowCategoryList(false);
+    Keyboard.dismiss();
+    await logAction('selecionou_categoria', { categoria: item.value });
+  };
+
   const handleGetLocation = async () => {
     setLoadingLocation(true);
-
     try {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
@@ -58,32 +89,19 @@ export default function CadastrarEstabelecimento() {
         setLoadingLocation(false);
         return;
       }
-
       let location = await Location.getCurrentPositionAsync({});
       const { latitude, longitude } = location.coords;
-
       setCoords({ latitude, longitude });
 
-      await logAction('usar_localizacao_atual', {
-        latitude,
-        longitude
-      });
+      await logAction('usar_localizacao_atual', { latitude, longitude });
 
-      let addressResponse = await Location.reverseGeocodeAsync({
-        latitude,
-        longitude,
-      });
-
+      let addressResponse = await Location.reverseGeocodeAsync({ latitude, longitude });
       if (addressResponse && addressResponse.length > 0) {
         const a = addressResponse[0];
         const formattedAddress = `${a.street || a.name || ''}, ${a.streetNumber || ''} - ${a.district || ''}, ${a.city || ''} - ${a.region || ''}, CEP: ${a.postalCode || ''}`;
         setEndereco(formattedAddress);
-
-        await logAction('endereco_resolvido_por_gps', {
-          endereco_resolvido: formattedAddress
-        });
+        await logAction('endereco_resolvido_por_gps', { endereco_resolvido: formattedAddress });
       }
-
     } catch (error) {
       Alert.alert('Erro', error.message);
     } finally {
@@ -93,7 +111,7 @@ export default function CadastrarEstabelecimento() {
 
   const handleSave = async () => {
     if (!estabelecimento || !endereco || !categoria || !image) {
-      Alert.alert('Campos Incompletos', 'Preencha todos os obrigatórios.');
+      Alert.alert('Campos Incompletos', 'Preencha todos os obrigatórios (incluindo selecionar uma categoria válida).');
       return;
     }
 
@@ -135,6 +153,7 @@ export default function CadastrarEstabelecimento() {
           setEstabelecimento('');
           setEndereco('');
           setCategoria(null);
+          setSearchCategoria('');
           setImage(null);
           setAcessibilidade([]);
           setCoords(null);
@@ -163,18 +182,39 @@ export default function CadastrarEstabelecimento() {
 
       case "categoria":
         return (
-          <View style={{ marginTop: 30 }}>
-            <Text style={{ color: theme.COLORS.BLACK1, fontSize: 14, left: 12, paddingHorizontal: 5, marginBottom: 10 }}>
-              Categoria<Text style={{ color: theme.COLORS.RED1 }}> *</Text>
-            </Text>
-
-            <CategoriaChips
-              selected={categoria}
-              onSelect={async (cat) => {
-                setCategoria(cat);
-                await logAction('selecionou_categoria', { categoria: cat });
-              }}
+          <View style={{ zIndex: 10 }}> 
+            <TextInputMAI
+              texto="Categoria"
+              value={searchCategoria}
+              onChangeText={handleSearchCategory}
+              placeholder="Digite para buscar (ex: Restaurante)"
             />
+            
+            {showCategoryList && (
+              <View style={styles.dropdownContainer}>
+                {filteredCategories.length > 0 ? (
+                  filteredCategories.map((cat, index) => (
+                    <TouchableOpacity
+                      key={`${cat.value}_${index}`}
+                      style={styles.dropdownItem}
+                      onPress={() => handleSelectCategory(cat)}
+                    >
+                      <Text style={styles.dropdownText}>{cat.label}</Text>
+                    </TouchableOpacity>
+                  ))
+                ) : (
+                   <View style={styles.dropdownItem}>
+                      <Text style={{color: '#999'}}>Nenhuma categoria encontrada</Text>
+                   </View>
+                )}
+              </View>
+            )}
+            
+            {!categoria && searchCategoria.length > 0 && !showCategoryList && (
+               <Text style={{color: theme.COLORS.RED1, fontSize: 12, marginLeft: 12, marginTop: 5}}>
+                 Selecione uma categoria da lista.
+               </Text>
+            )}
           </View>
         );
 
@@ -223,34 +263,11 @@ export default function CadastrarEstabelecimento() {
     }
   };
 
-  const CategoriaChips = ({ selected, onSelect }) => {
-    return (
-      <FlatList
-        horizontal
-        data={categoryItems}
-        keyExtractor={(item, index) => `${item.value}_${index}`}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingVertical: 5 }}
-        renderItem={({ item }) => {
-          const active = selected === item.value;
-
-          return (
-            <TouchableOpacity
-              style={[styles.chip, active && styles.chipActive]}
-              onPress={() => onSelect(item.value)}
-            >
-              <Text style={[styles.chipText, active && styles.chipTextActive]}>
-                {item.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        }}
-      />
-    );
-  };
-
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+    <TouchableWithoutFeedback onPress={() => {
+        Keyboard.dismiss();
+        setShowCategoryList(false);
+    }}>
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : "height"}

@@ -41,13 +41,8 @@ export default function Configuration(){
                       keyboardShouldPersistTaps="handled"
                       >
             <SafeAreaView>
-        <TouchableOpacity onPress={suport} style={styles.select}>
-            <Text style={styles.textSelect}>Solicitar suporte</Text>
-            <Text style={{marginLeft: 10,marginTop:10, color: theme.COLORS.BLACK1}}>Fale com nossa equipe</Text>
-        </TouchableOpacity>
         <TouchableOpacity onPress={handleExit} style={styles.select}>
             <Text style={styles.textSelect}>Sair</Text>
-            <Text style={{marginLeft: 10,marginTop:10, color: theme.COLORS.BLACK1}}>Fale com nossa equipe</Text>
         </TouchableOpacity>
         
     </SafeAreaView>

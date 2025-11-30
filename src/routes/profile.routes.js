@@ -10,6 +10,10 @@ import ConfiguracoesAvancadas from '../screens/Profiles/Change/ConfiguracoesAvan
 import MinhasSolicitacoes from '../screens/Profiles/MinhasSolicitacoes';
 import SolicitacaoDetalheUser from '../screens/Profiles/MinhasSolicitacoes/Detalhe';
 
+import MinhasAvaliacoes from '../screens/Profiles/MinhasAvaliacoes';
+
+import MeusEstabelecimentos from '../screens/Profiles/MeusEstabelecimentos';
+
 const Stack = createStackNavigator();
 
 export default function ProfileStack() {
@@ -88,15 +92,35 @@ export default function ProfileStack() {
         }}
       />
 
-      <Stack.Screen
-        name="SolicitacaoDetalheUser"
-        component={SolicitacaoDetalheUser}
-        options={{
-          headerTitle: 'Detalhes da Solicitação',
-          headerTintColor: theme.COLORS.WHITE3,
-          headerStyle: { backgroundColor: theme.COLORS.BLUE1 }
-        }}
-      />
+          <Stack.Screen
+            name="SolicitacaoDetalheUser"
+            component={SolicitacaoDetalheUser}
+            options={{
+              headerTitle: 'Detalhes da Solicitação',
+              headerTintColor: theme.COLORS.WHITE3,
+              headerStyle: { backgroundColor: theme.COLORS.BLUE1 }
+            }}
+          />
+
+          <Stack.Screen
+            name="MinhasAvaliacoes"
+            component={MinhasAvaliacoes}
+            options={{
+              headerTitle: 'Minhas Avaliações',
+              headerTintColor: theme.COLORS.WHITE3,
+              headerStyle: { backgroundColor: theme.COLORS.BLUE1 }
+            }}
+          />
+
+          <Stack.Screen
+            name="MeusEstabelecimentos"
+            component={MeusEstabelecimentos}
+            options={{
+              headerTitle: 'Meus Estabelecimentos',
+              headerTintColor: theme.COLORS.WHITE3,
+              headerStyle: { backgroundColor: theme.COLORS.BLUE1 }
+            }}
+          />
 
     </Stack.Navigator>
   );

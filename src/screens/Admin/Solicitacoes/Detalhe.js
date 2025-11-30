@@ -1,11 +1,20 @@
 import React, { useState, useContext, useEffect } from "react";
-import { View, Text, ScrollView, Alert, ActivityIndicator,Image } from "react-native";
+import { 
+  View, 
+  Text, 
+  ScrollView, 
+  Alert, 
+  ActivityIndicator, 
+  Image, 
+  StyleSheet 
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import TextInputMAI from "../../../components/TextInputMAI";
 import ButtonMAI from "../../../components/ButtonMAI";
 import { AppContext } from "../../../contexts/app";
 import theme from "../../../theme";
 import { supabase } from "../../../services/supabase";
+import { categoryItems } from "../../Home/CadastrarEstabelecimento/categoryItems";
 
 export default function AdminDetalheSolicitacao({ route, navigation }) {
   const { aprovarSolicitacao, rejeitarSolicitacao } = useContext(AppContext);
@@ -15,9 +24,17 @@ export default function AdminDetalheSolicitacao({ route, navigation }) {
   const [estab, setEstab] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const fieldLabels = {
+    nome: "Nome do Estabelecimento",
+    categoria: "Categoria",
+    endereco: "Endereço",
+    acessibilidades: "Itens de Acessibilidade",
+    url_foto_nova: "Foto do Local"
+  };
+
   useEffect(() => {
     async function loadEstab() {
-      if (solicitacao.tipo === "editar") {
+      if (solicitacao.tipo === "editar" && solicitacao.id_estabelecimento) {
         const { data } = await supabase
           .from("estabelecimentos")
           .select("*")
@@ -32,185 +49,261 @@ export default function AdminDetalheSolicitacao({ route, navigation }) {
   }, []);
 
   async function aceitar() {
-    try{
-    const ok = await aprovarSolicitacao(
-      solicitacao.id,
-      solicitacao.id_estabelecimento,
-      solicitacao.alteracoes
-    );
-    if (ok) navigation.goBack();
-  } catch (error) {
-    console.log(error);
-    Alert.alert("Erro ao aprovar solicitação", error.message);
-  }
+    try {
+      const ok = await aprovarSolicitacao(
+        solicitacao.id,
+        solicitacao.id_estabelecimento,
+        solicitacao.alteracoes
+      );
+      if (ok) navigation.goBack();
+    } catch (error) {
+      Alert.alert("Erro", error.message);
+    }
   }
 
   async function rejeitar() {
     if (!motivoRejeicao.trim()) {
-      Alert.alert("Justifique a rejeição");
+      Alert.alert("Atenção", "É obrigatório justificar a rejeição.");
       return;
     }
-    try{
+    try {
       const ok = await rejeitarSolicitacao(solicitacao.id, motivoRejeicao);
       if (ok) navigation.goBack();
     } catch (error) {
-      console.log(error);
-      Alert.alert("Erro ao rejeitar solicitação", error.message);
+      Alert.alert("Erro", error.message);
     }
   }
 
+  const getCategoryLabel = (value) => {
+    const found = categoryItems.find((item) => item.value === value);
+    return found ? found.label : value;
+  };
+
+  const checkIfChanged = (key, oldVal, newVal) => {
+    if (key === 'url_foto_nova' && newVal) return true;
+
+    const oldV = oldVal || "";
+    const newV = newVal || "";
+
+    if (key === 'acessibilidades') {
+        const arrOld = typeof oldV === 'string' ? oldV.split(',').map(s => s.trim()).sort().join(',') : "";
+        const arrNew = typeof newV === 'string' ? newV.split(',').map(s => s.trim()).sort().join(',') : "";
+        return arrOld !== arrNew;
+    }
+
+    return String(oldV).trim() !== String(newV).trim();
+  };
+
+  const ValueDisplay = ({ value, fieldKey, isImage }) => {
+    if (!value) return <Text style={styles.missingText}>(Vazio)</Text>;
+
+    if (isImage) {
+      let uri = null;
+      if (typeof value === "object" && value?.uri) uri = value.uri;
+      else if (typeof value === "string") {
+         uri = value.startsWith("http") || value.startsWith("data:") 
+           ? value : `data:image/jpeg;base64,${value}`;
+      }
+      if (!uri) return <Text style={styles.missingText}>(Imagem inválida)</Text>;
+      return <Image source={{ uri }} style={styles.imagePreview} resizeMode="cover" />;
+    }
+
+    if (fieldKey === "acessibilidades") {
+      const items = typeof value === 'string' ? value.split(",") : [];
+      return (
+        <View style={styles.tagsContainer}>
+          {items.map((item, idx) => (
+            item.trim() ? (
+              <View key={idx} style={styles.tag}>
+                <Text style={styles.tagText}>{item.trim()}</Text>
+              </View>
+            ) : null
+          ))}
+        </View>
+      );
+    }
+
+    if (fieldKey === "categoria") return <Text style={styles.valueText}>{getCategoryLabel(value)}</Text>;
+
+    return <Text style={styles.valueText}>{String(value)}</Text>;
+  };
+
   function renderAlteracoes() {
-  if (!estab || !solicitacao.alteracoes) return null;
+    if (loading) return <ActivityIndicator color={theme.COLORS.BLUE1} />;
+    
+    const alteracoes = solicitacao.alteracoes || {};
+    let campos = Object.keys(alteracoes);
 
-  const alteracoes = solicitacao.alteracoes;
-  const campos = Object.keys(alteracoes);
+    if (estab && solicitacao.tipo === "editar") {
+        campos = campos.filter(key => checkIfChanged(key, estab[key], alteracoes[key]));
+    }
 
-  if (campos.length === 0)
-    return <Text>Nenhuma alteração enviada.</Text>;
-
-  return (
-    <View style={{ marginTop: 15 }}>
-      {campos.map((campo) => {
-        const valorNovo = alteracoes[campo];
-        const valorAntigo = estab[campo];
-
-        const isImagem =
-          campo.toLowerCase().includes("foto") ||
-          campo.toLowerCase().includes("img");
-
+    if (campos.length === 0) {
         return (
-          <View key={campo} style={{ marginBottom: 20 }}>
+            <View style={styles.noChangeContainer}>
+                <Text style={styles.noChangeText}>
+                    ⚠️ Os dados enviados são idênticos aos atuais do estabelecimento.
+                </Text>
+            </View>
+        );
+    }
 
-            <Text style={{ fontWeight: "bold", fontSize: 17 }}>
-              {campo.charAt(0).toUpperCase() + campo.slice(1)}
-            </Text>
+    return (
+      <View style={{ marginTop: 10 }}>
+        {campos.map((campo) => {
+          const valorNovo = alteracoes[campo];
+          const valorAntigo = estab ? estab[campo] : null; 
+          
+          const isImageField = campo.includes("foto") || campo.includes("img");
+          const label = fieldLabels[campo] || campo;
 
-            {isImagem ? (
-              <>
-                <Text style={{ color: "#666", marginTop: 4 }}>Antes:</Text>
-
-                {valorAntigo ? (
-                  <Image
-                    source={{ uri: valorAntigo }}
-                    style={{
-                      width: "100%",
-                      height: 180,
-                      borderRadius: 10,
-                      marginVertical: 5,
-                    }}
-                    resizeMode="cover"
-                  />
-                ) : (
-                  <Text style={{ marginLeft: 10 }}>(Sem foto atual)</Text>
+          return (
+            <View key={campo} style={styles.changeCard}>
+              <Text style={styles.fieldTitle}>{label}</Text>
+              
+              <View style={styles.comparisonContainer}>
+                {solicitacao.tipo === "editar" && (
+                  <View style={[styles.compareBox, styles.boxOld]}>
+                    <Text style={styles.boxHeader}>ATUAL</Text>
+                    <ValueDisplay value={valorAntigo} fieldKey={campo} isImage={isImageField} />
+                  </View>
                 )}
 
-                <Text style={{ color: "#666", marginTop: 4 }}>Depois:</Text>
-
-                {(() => {
-                  let uri = null;
-
-                  if (typeof valorNovo === "object" && valorNovo !== null) {
-                    if (valorNovo.uri) uri = valorNovo.uri;
-                    else if (valorNovo.base64)
-                      uri = `data:image/jpeg;base64,${valorNovo.base64}`;
-                  }
-
-                  else if (typeof valorNovo === "string") {
-                    uri = valorNovo.startsWith("http")
-                      ? valorNovo
-                      : `data:image/jpeg;base64,${valorNovo}`;
-                  }
-
-                  if (!uri)
-                    return (
-                      <Text style={{ marginLeft: 10 }}>(Sem nova foto)</Text>
-                    );
-
-                  return (
-                    <Image
-                      source={{ uri }}
-                      style={{
-                        width: "100%",
-                        height: 180,
-                        borderRadius: 10,
-                        marginVertical: 5,
-                      }}
-                      resizeMode="cover"
-                    />
-                  );
-                })()}
-              </>
-            ) : (
-              <>
-                <Text style={{ color: "#666", marginTop: 4 }}>Antes:</Text>
-                <Text style={{ marginLeft: 10 }}>
-                  {JSON.stringify(valorAntigo, null, 2)}
-                </Text>
-
-                <Text style={{ color: "#666", marginTop: 4 }}>Depois:</Text>
-                <Text style={{ marginLeft: 10 }}>
-                  {JSON.stringify(valorNovo, null, 2)}
-                </Text>
-              </>
-            )}
-          </View>
-        );
-      })}
-    </View>
-  );
-}
-
+                <View style={[styles.compareBox, styles.boxNew]}>
+                  <Text style={[styles.boxHeader, { color: theme.COLORS.BLUE1 }]}>
+                    {solicitacao.tipo === "novo" ? "DADOS" : "PROPOSTO"}
+                  </Text>
+                  <ValueDisplay value={valorNovo} fieldKey={campo} isImage={isImageField} />
+                </View>
+              </View>
+            </View>
+          );
+        })}
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.COLORS.WHITE3 }}>
-      <ScrollView style={{ padding: 20 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
 
-        <Text style={{ fontSize: 22, fontWeight: "bold" }}>
-          {solicitacao.nome_estabelecimento ||
-            solicitacao.estabelecimentos?.nome ||
-            "(Estabelecimento removido)"}
+        <Text style={styles.headerTitle}>
+          {solicitacao.nome_estabelecimento || solicitacao.estabelecimentos?.nome || "Estabelecimento"}
         </Text>
 
-        <Text style={{ marginTop: 10 }}>Tipo: {solicitacao.tipo}</Text>
+        <View style={styles.typeBadge}>
+          <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>
+            {solicitacao.tipo === 'novo' ? 'NOVO CADASTRO' : 'EDIÇÃO'}
+          </Text>
+        </View>
 
-        <Text style={{ marginTop: 20, fontWeight: "bold" }}>
-          Justificativa do usuário:
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Justificativa:</Text>
+          <View style={styles.justificationBox}>
+             <Text style={styles.bodyText}>{solicitacao.justificativa}</Text>
+          </View>
+        </View>
+
+        <Text style={[styles.sectionLabel, { marginTop: 20, marginBottom: 5 }]}>
+          Alterações Identificadas:
         </Text>
-        <Text>{solicitacao.justificativa}</Text>
-
-        {solicitacao.tipo === "editar" && solicitacao.alteracoes && (
-          <>
-            <Text style={{ marginTop: 20, fontWeight: "bold" }}>
-              Alterações solicitadas:
-            </Text>
-            {renderAlteracoes()}
-          </>
-        )}
+        {renderAlteracoes()}
 
         {solicitacao.status === "pendente" && (
-          <>
-            <ButtonMAI name="Aprovar Solicitação" onPress={aceitar} />
-
-            <TextInputMAI
-              texto="Motivo da rejeição (obrigatório)"
-              value={motivoRejeicao}
-              onChangeText={setMotivoRejeicao}
-              style={{
-                height: 120,
-                textAlignVertical: "top",
-                paddingTop: 15,
-              }}
-              multiline
+          <View style={styles.actionsContainer}>
+            <View style={styles.divider} />
+            <ButtonMAI 
+              name="Aprovar Alterações" 
+              onPress={aceitar} 
+              style={{ backgroundColor: '#28a745', marginBottom: 20 }}
             />
-
-            <ButtonMAI
-              name="Rejeitar Solicitação"
-              onPress={rejeitar}
-              icon="close"
-            />
-          </>
+            <View style={styles.rejectContainer}>
+              <Text style={{fontWeight:'bold', color: theme.COLORS.RED1, marginBottom: 5}}>
+                Rejeitar solicitação?
+              </Text>
+              <TextInputMAI
+                texto="Motivo (Obrigatório)"
+                value={motivoRejeicao}
+                onChangeText={setMotivoRejeicao}
+                style={styles.rejectInput}
+                multiline
+              />
+              <ButtonMAI
+                name="Confirmar Rejeição"
+                onPress={rejeitar}
+                limpo={true}
+                style={{borderColor: theme.COLORS.RED1, borderWidth: 1}}
+                textColor={theme.COLORS.RED1}
+              />
+            </View>
+          </View>
         )}
       </ScrollView>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  headerTitle: { fontSize: 22, fontWeight: "bold", color: "#333" },
+  typeBadge: {
+    backgroundColor: theme.COLORS.BLUE1 || "#007BFF",
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 4,
+    marginTop: 5,
+    marginBottom: 20,
+  },
+  section: { marginBottom: 10 },
+  sectionLabel: {
+    fontSize: 14, fontWeight: "bold", color: "#555",
+    textTransform: 'uppercase', marginBottom: 8,
+  },
+  justificationBox: {
+    backgroundColor: "#fff", padding: 15, borderRadius: 8,
+    borderLeftWidth: 4, borderLeftColor: '#F0AD4E',
+    shadowColor: "#000", shadowOpacity: 0.05, elevation: 1,
+  },
+  bodyText: { fontSize: 15, color: "#444", lineHeight: 22 },
+  changeCard: {
+    backgroundColor: '#fff', borderRadius: 8, padding: 15, marginBottom: 15,
+    borderWidth: 1, borderColor: '#eee', elevation: 2,
+  },
+  fieldTitle: {
+    fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 10,
+    borderBottomWidth: 1, borderBottomColor: '#f0f0f0', paddingBottom: 5
+  },
+  comparisonContainer: { flexDirection: 'column', gap: 10 },
+  compareBox: { padding: 10, borderRadius: 6, borderWidth: 1 },
+  boxOld: { backgroundColor: '#f9f9f9', borderColor: '#e0e0e0' },
+  boxNew: { backgroundColor: '#f0f8ff', borderColor: '#d0e0ff' },
+  boxHeader: {
+    fontSize: 10, fontWeight: '900', color: '#888', marginBottom: 5,
+    textTransform: 'uppercase'
+  },
+  valueText: { fontSize: 15, color: '#222' },
+  missingText: { fontStyle: 'italic', color: '#999', fontSize: 13 },
+  imagePreview: { width: '100%', height: 150, borderRadius: 6, backgroundColor: '#eee' },
+  tagsContainer: { flexDirection: "row", flexWrap: "wrap", marginTop: 2 },
+  tag: {
+    backgroundColor: "#fff", borderRadius: 15, paddingHorizontal: 10,
+    paddingVertical: 4, marginRight: 6, marginBottom: 6,
+    borderWidth: 1, borderColor: "#ccc"
+  },
+  tagText: { fontSize: 12, color: "#555" },
+  actionsContainer: { marginTop: 20 },
+  divider: { height: 1, backgroundColor: '#ddd', marginVertical: 20 },
+  rejectContainer: {
+    marginTop: 20, backgroundColor: '#FFF5F5', padding: 15,
+    borderRadius: 8, borderWidth: 1, borderColor: '#ffe0e0'
+  },
+  rejectInput: {
+    height: 80, textAlignVertical: "top", backgroundColor: '#fff',
+    marginBottom: 10, paddingTop: 10, fontSize: 14
+  },
+  noChangeContainer: {
+    padding: 20, backgroundColor: '#FFFBE6', borderWidth: 1,
+    borderColor: '#FFE58F', borderRadius: 8
+  },
+  noChangeText: { color: '#856404', textAlign: 'center' }
+});

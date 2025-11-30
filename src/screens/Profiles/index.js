@@ -1,105 +1,105 @@
-import { useContext, useEffect, useState } from "react";
-import {Image,TouchableWithoutFeedback,Keyboard,KeyboardAvoidingView,Platform,ScrollView,} from "react-native";
+import React, { useContext } from "react";
+import { Image, FlatList, View } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from "@react-navigation/native";
 
 import { AuthContext } from "../../contexts/auth";
 import { styles } from "./styles";
-import ButtonMAI from "../../components/ButtonMAI"
+import ButtonMAI from "../../components/ButtonMAI";
 import Campget from "../../components/Campget";
-import { useNavigation } from "@react-navigation/native";
+import theme from "../../theme";
 
-
-export default function ProfileScreen({ route }) {
+export default function ProfileScreen() {
   const { user } = useContext(AuthContext);
+  const navigation = useNavigation();
 
-  const stack = useNavigation();
+  const formatDate = (dateString) => {
+    if (!dateString) return "Não informado";
+    const [year, month, day] = dateString.split('-');
+    return `${day}/${month}/${year}`;
+  };
 
-  const [profile, setProfile] = useState({
-    nome: user?.user_metadata?.full_name || "",
-    nascimento: user?.user_metadata?.birth_date || "",
-    deficiencia: user?.user_metadata?.disability || [],
-    avatar_url: user?.user_metadata?.avatar_url || "",
-    email: user?.user_metadata?.email || "",
-  });
+  const formatDisability = (disability) => {
+    if (Array.isArray(disability) && disability.length > 0) {
+      return disability.join(', ');
+    }
+    return disability || "Não informado";
+  };
 
-  useEffect(() => {
-    setProfile({
-      nome: user?.user_metadata?.full_name || "",
-      nascimento: user?.user_metadata?.birth_date || "",
-      deficiencia: user?.user_metadata?.disability || [],
-      avatar_url: user?.user_metadata?.avatar_url || "",
-      email: user?.user_metadata?.email || "",
-    });
-  }, [user, route.params?.refreshUser]);
+  const metadata = user?.user_metadata || {};
+  
+  const profileData = [
+    { 
+      id: '1', 
+      label: 'Nome', 
+      value: metadata.full_name 
+    },
+    { 
+      id: '2', 
+      label: 'Email', 
+      value: metadata.email || user?.email 
+    },
+    { 
+      id: '3', 
+      label: 'Data de Nascimento', 
+      value: formatDate(metadata.birth_date) 
+    },
+    { 
+      id: '4', 
+      label: 'Deficiência', 
+      value: formatDisability(metadata.disability) 
+    },
+  ];
 
-   const formatDate = (dateString) => {
-  if (!dateString) return "";
-  const [year, month, day] = dateString.split('-');
-  return `${day}/${month}/${year}`;
-};
+  const renderHeader = () => (
+    <View>
+      <Image
+        source={{
+          uri: metadata.avatar_url || "https://cdn-icons-png.flaticon.com/512/149/149071.png"
+        }}
+        style={styles.avatar}
+      />
 
-  return (
-       <TouchableWithoutFeedback
-       onPress={Keyboard.dismiss}
-       >
-       <KeyboardAvoidingView
-       style={styles.container}
-       behavior={Platform.OS === 'ios' ? 'padding': 'height'}
-       >
-        <SafeAreaView style={{flex: 1}}>
-           <ScrollView contentContainerStyle={{flexGrow: 1, paddingBottom: 20}}
-                  showsVerticalScrollIndicator={false}
-                  keyboardShouldPersistTaps="handled"
-                  style={{flex: 1}}
-                  >
-        {profile.avatar_url ? (
-          <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
-        ) : (
-          <Image
-  source={{
-    uri: profile.avatar_url || "https://cdn-icons-png.flaticon.com/512/149/149071.png"
-  }}
-  style={styles.avatar}
-/>
-        )}
-
-        <ButtonMAI
+      <ButtonMAI
         name="Minhas Solicitações"
-        onPress={()=> stack.navigate("MinhasSolicitacoes")}
-        />
+        onPress={() => navigation.navigate("MinhasSolicitacoes")}
+      />
 
-        <ButtonMAI
+      <ButtonMAI
+      name="Minhas Avaliações"
+      onPress={() => navigation.navigate("MinhasAvaliacoes")}
+      />
+      
+      <ButtonMAI
+        name="Meus Estabelecimentos"
+        onPress={() => navigation.navigate("MeusEstabelecimentos")}
+      />
+
+      <ButtonMAI
         name="Editar perfil"
         icon="pencil-outline"
-        onPress={()=> stack.navigate("Editar Perfil")}
-        />
+        onPress={() => navigation.navigate("Editar Perfil")}
+      />
+    </View>
+  );
 
-        <Campget
-        campo="Nome"
-        dado={profile.nome}
-        />
-
-        <Campget
-        campo="Email"
-        dado={profile.email}
-        />
-
-        <Campget
-        campo="Data de Nascimento"
-        dado={formatDate(profile.nascimento)}
-        />
-
-        <Campget
-        campo="Deficiência"
-        dado={profile.deficiencia && Array.isArray(profile.deficiencia) && profile.deficiencia.length > 0
-      ? profile.deficiencia.join(', ')
-      : profile.deficiencia || "Não informado"
-  }
-        />
-
-     </ScrollView>
-      </SafeAreaView>
-     </KeyboardAvoidingView>
-     </TouchableWithoutFeedback>
+  return (
+    <SafeAreaView style={{ flex: 1, paddingHorizontal: 20, backgroundColor: theme.COLORS.WHITE3 }}>
+      <FlatList
+        data={profileData}
+        keyExtractor={(item) => item.id}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 20 }}
+        
+        ListHeaderComponent={renderHeader}
+        
+        renderItem={({ item }) => (
+          <Campget
+            campo={item.label}
+            dado={item.value || "Não informado"}
+          />
+        )}
+      />
+    </SafeAreaView>
   );
 }
