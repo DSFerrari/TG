@@ -1,5 +1,16 @@
 import React, { useContext, useEffect, useState, useCallback } from 'react';
-import { View, Text, ActivityIndicator, FlatList } from 'react-native';
+import { 
+  View, 
+  Text, 
+  ActivityIndicator, 
+  FlatList, 
+  Modal, 
+  TextInput, 
+  TouchableOpacity, 
+  Alert,
+  KeyboardAvoidingView,
+  Platform 
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
@@ -14,9 +25,14 @@ export default function Avaliacoes() {
   const route = useRoute();
   const { estabelecimentoId } = route.params;
   const { getAvaliacoesByEstabelecimento } = useContext(AppContext);
+  
   const [selectedAvaliacao, setSelectedAvaliacao] = useState(null);
-const [menuVisible, setMenuVisible] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
+  
 
+  const [modalMotivoVisible, setModalMotivoVisible] = useState(false);
+  const [motivoTexto, setMotivoTexto] = useState("");
+  const [sending, setSending] = useState(false);
 
   const [avaliacoes, setAvaliacoes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -74,85 +90,155 @@ const [menuVisible, setMenuVisible] = useState(false);
   };
 
   const renderItem = ({ item }) => (
-  <View style={styles.card}>
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-      <Text style={styles.nome}>
-        {item.eh_anonimo ? 'Anônimo' : item.nome_usuario || 'Usuário'}
+    <View style={styles.card}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+        <Text style={styles.nome}>
+          {item.eh_anonimo ? 'Anônimo' : item.nome_usuario || 'Usuário'}
+        </Text>
+
+        <MaterialIcons
+          name="more-vert"
+          size={26}
+          color={theme.COLORS.BLACK2}
+          style={{ padding: 4 }}
+          onPress={() => {
+            setSelectedAvaliacao(item);
+            setMenuVisible(true);
+          }}
+        />
+      </View>
+
+      {renderStars(item.nota)}
+
+      <Text style={styles.titulo}>{item.titulo}</Text>
+      <Text style={styles.data}>
+        {new Date(item.data_criacao).toLocaleDateString('pt-BR')}
       </Text>
-
-      <MaterialIcons
-        name="more-vert"
-        size={26}
-        color={theme.COLORS.BLACK2}
-        style={{ padding: 4 }}
-        onPress={() => {
-          setSelectedAvaliacao(item);
-          setMenuVisible(true);
-        }}
-      />
+      <Text style={styles.texto}>{item.comentario}</Text>
     </View>
+  );
 
-    {renderStars(item.nota)}
-
-    <Text style={styles.titulo}>{item.titulo}</Text>
-    <Text style={styles.data}>
-      {new Date(item.data_criacao).toLocaleDateString('pt-BR')}
-    </Text>
-    <Text style={styles.texto}>{item.comentario}</Text>
-  </View>
-);
-
-
-  async function solicitarExclusaoAvaliacao(avaliacaoId) {
-  try {
-    const { error } = await supabase
-      .from("pedidos_exclusao_avaliacao")
-      .insert({
-        id_avaliacao: avaliacaoId,
-        id_estabelecimento: estabelecimentoId,
-        motivo: "Solicitação do usuário",
-        status: "pendente",
-      });
-
-    if (error) {
-      alert("Erro ao solicitar exclusão.");
+  async function confirmarExclusao() {
+    if (!motivoTexto.trim()) {
+      Alert.alert("Atenção", "Por favor, digite o motivo da exclusão.");
       return;
     }
 
-    alert("Pedido enviado! O administrador irá analisar.");
-  } catch (err) {
-    alert("Erro inesperado");
+    setSending(true);
+
+    try {
+      const { error } = await supabase
+        .from("pedidos_exclusao_avaliacao")
+        .insert({
+          id_avaliacao: selectedAvaliacao.id,
+          id_estabelecimento: estabelecimentoId,
+          motivo: motivoTexto,
+          status: "pendente",
+        });
+
+      if (error) throw error;
+
+      Alert.alert("Sucesso", "Pedido enviado! O administrador irá analisar.");
+      
+      setMotivoTexto("");
+      setModalMotivoVisible(false);
+      setMenuVisible(false);
+      setSelectedAvaliacao(null);
+
+    } catch (err) {
+      console.log(err);
+      Alert.alert("Erro", "Não foi possível enviar a solicitação.");
+    } finally {
+      setSending(false);
+    }
   }
-}
 
-const renderMenu = () => {
-  if (!menuVisible || !selectedAvaliacao) return null;
+  const renderMenu = () => {
+    if (!menuVisible || !selectedAvaliacao) return null;
 
-  return (
-    <View style={styles.menuOverlay}>
-      <View style={styles.menuBox}>
-        <Text style={styles.menuTitle}>Opções</Text>
+    return (
+      <View style={styles.menuOverlay}>
+        <View style={styles.menuBox}>
+          <Text style={styles.menuTitle}>Opções</Text>
 
-        <Text
-          style={styles.menuOption}
-          onPress={() => {
-            setMenuVisible(false);
-            solicitarExclusaoAvaliacao(selectedAvaliacao.id);
-          }}
-        >
-          Solicitar exclusão da avaliação
-        </Text>
+          <Text
+            style={styles.menuOption}
+            onPress={() => {
+              setMenuVisible(false);
+              setMotivoTexto("");
+              setModalMotivoVisible(true);
+            }}
+          >
+            Solicitar exclusão da avaliação
+          </Text>
 
-        <Text
-          style={[styles.menuOption, { color: 'red' }]}
-          onPress={() => setMenuVisible(false)}
-        >
-          Cancelar
-        </Text>
+          <Text
+            style={[styles.menuOption, { color: 'red' }]}
+            onPress={() => {
+                setMenuVisible(false);
+                setSelectedAvaliacao(null);
+            }}
+          >
+            Cancelar
+          </Text>
+        </View>
       </View>
-    </View>
+    );
+  };
+
+  const renderModalMotivo = () => (
+    <Modal
+      visible={modalMotivoVisible}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={() => setModalMotivoVisible(false)}
+    >
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}
+      >
+        <View style={{ width: '85%', backgroundColor: '#fff', borderRadius: 12, padding: 20, elevation: 5 }}>
+          <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>
+            Solicitar Exclusão
+          </Text>
+          <Text style={{ marginBottom: 10, color: '#555' }}>
+            Por favor, explique por que esta avaliação deve ser removida:
+          </Text>
+
+          <TextInput
+            style={{
+              borderWidth: 1,
+              borderColor: '#ddd',
+              borderRadius: 8,
+              padding: 10,
+              height: 100,
+              textAlignVertical: 'top',
+              backgroundColor: '#f9f9f9'
+            }}
+            placeholder="Digite o motivo aqui..."
+            multiline
+            numberOfLines={4}
+            value={motivoTexto}
+            onChangeText={setMotivoTexto}
+          />
+
+          <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 20, gap: 15 }}>
+            <TouchableOpacity onPress={() => setModalMotivoVisible(false)} disabled={sending}>
+              <Text style={{ fontSize: 16, color: '#666', fontWeight: 'bold' }}>Cancelar</Text>
+            </TouchableOpacity>
+
+            {sending ? (
+              <ActivityIndicator size="small" color={theme.COLORS.BLUE1} />
+            ) : (
+              <TouchableOpacity onPress={confirmarExclusao}>
+                <Text style={{ fontSize: 16, color: theme.COLORS.BLUE1, fontWeight: 'bold' }}>Enviar</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
   );
-};
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -178,7 +264,10 @@ const renderMenu = () => {
           }
         />
       </View>
+      
       {renderMenu()}
+      {renderModalMotivo()}
+
     </SafeAreaView>
   );
 }

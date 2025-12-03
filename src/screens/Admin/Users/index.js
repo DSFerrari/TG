@@ -61,7 +61,6 @@ export default function UsersAdmin() {
               padding: 15,
               backgroundColor: theme.COLORS.WHITE1,
               borderRadius: 10,
-              shadowColor: "#000",
               shadowOpacity: 0.1,
               shadowRadius: 4,
             }}
@@ -92,23 +91,23 @@ export default function UsersAdmin() {
                   <TouchableOpacity
                     onPress={() => handleUnban(item.id)}
                     style={{
-                      backgroundColor: "#28a745",
+                      backgroundColor: theme.COLORS.GREEN1,
                       padding: 8,
                       borderRadius: 8,
                     }}
                   >
-                    <Text style={{ color: "#fff" }}>Reativar</Text>
+                    <Text style={{ color: theme.COLORS.WHITE1 }}>Reativar</Text>
                   </TouchableOpacity>
                 ) : (
                   <TouchableOpacity
                     onPress={() => handleBan(item.id)}
                     style={{
-                      backgroundColor: "#dc3545",
+                      backgroundColor: theme.COLORS.RED1,
                       padding: 8,
                       borderRadius: 8,
                     }}
                   >
-                    <Text style={{ color: "#fff" }}>Banir</Text>
+                    <Text style={{ color: theme.COLORS.WHITE1 }}>Banir</Text>
                   </TouchableOpacity>
                 )}
               </View>

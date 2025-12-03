@@ -10,7 +10,7 @@ export const styles = StyleSheet.create({
     },
     select:{
         backgroundColor: theme.COLORS.WHITE2,
-        padding: 20,
+        padding: 24,
         borderWidth:1,
         borderColor: theme.COLORS.WHITE1,
         borderRadius:12

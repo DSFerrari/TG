@@ -62,7 +62,8 @@ export default function AdminSolicitacoes({ navigation }) {
               }
               style={{
                 padding: 15,
-                backgroundColor: "#fff",
+                backgroundColor: theme.COLORS.WHITE1,
+                borderColor: theme.COLORS.BLACK1,
                 marginBottom: 12,
                 borderRadius: 10,
                 elevation: 2,

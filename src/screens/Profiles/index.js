@@ -59,28 +59,33 @@ export default function ProfileScreen() {
         }}
         style={styles.avatar}
       />
-
+      <View style={{ marginBottom: -15}}>
       <ButtonMAI
         name="Minhas Solicitações"
         onPress={() => navigation.navigate("MinhasSolicitacoes")}
+        limpo={true}
       />
-
+    </View>
+    <View style={{ marginBottom: -15}}>
       <ButtonMAI
       name="Minhas Avaliações"
       onPress={() => navigation.navigate("MinhasAvaliacoes")}
+      limpo={true}
       />
-      
+    </View>
+      <View style={{ marginBottom: -15}}>
       <ButtonMAI
         name="Meus Estabelecimentos"
         onPress={() => navigation.navigate("MeusEstabelecimentos")}
+        limpo={true}
       />
-
+      </View>
       <ButtonMAI
         name="Editar perfil"
         icon="pencil-outline"
         onPress={() => navigation.navigate("Editar Perfil")}
       />
-    </View>
+      </View>
   );
 
   return (

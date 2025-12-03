@@ -1,12 +1,12 @@
 import React, { useState, useContext, useEffect } from "react";
-import { 
-  View, 
-  Text, 
-  ScrollView, 
-  Alert, 
-  ActivityIndicator, 
-  Image, 
-  StyleSheet 
+import {
+  View,
+  Text,
+  ScrollView,
+  Alert,
+  ActivityIndicator,
+  Image,
+  StyleSheet
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import TextInputMAI from "../../../components/TextInputMAI";
@@ -86,9 +86,9 @@ export default function AdminDetalheSolicitacao({ route, navigation }) {
     const newV = newVal || "";
 
     if (key === 'acessibilidades') {
-        const arrOld = typeof oldV === 'string' ? oldV.split(',').map(s => s.trim()).sort().join(',') : "";
-        const arrNew = typeof newV === 'string' ? newV.split(',').map(s => s.trim()).sort().join(',') : "";
-        return arrOld !== arrNew;
+      const arrOld = typeof oldV === 'string' ? oldV.split(',').map(s => s.trim()).sort().join(',') : "";
+      const arrNew = typeof newV === 'string' ? newV.split(',').map(s => s.trim()).sort().join(',') : "";
+      return arrOld !== arrNew;
     }
 
     return String(oldV).trim() !== String(newV).trim();
@@ -101,8 +101,8 @@ export default function AdminDetalheSolicitacao({ route, navigation }) {
       let uri = null;
       if (typeof value === "object" && value?.uri) uri = value.uri;
       else if (typeof value === "string") {
-         uri = value.startsWith("http") || value.startsWith("data:") 
-           ? value : `data:image/jpeg;base64,${value}`;
+        uri = value.startsWith("http") || value.startsWith("data:")
+          ? value : `data:image/jpeg;base64,${value}`;
       }
       if (!uri) return <Text style={styles.missingText}>(Imagem inválida)</Text>;
       return <Image source={{ uri }} style={styles.imagePreview} resizeMode="cover" />;
@@ -130,37 +130,37 @@ export default function AdminDetalheSolicitacao({ route, navigation }) {
 
   function renderAlteracoes() {
     if (loading) return <ActivityIndicator color={theme.COLORS.BLUE1} />;
-    
+
     const alteracoes = solicitacao.alteracoes || {};
     let campos = Object.keys(alteracoes);
 
     if (estab && solicitacao.tipo === "editar") {
-        campos = campos.filter(key => checkIfChanged(key, estab[key], alteracoes[key]));
+      campos = campos.filter(key => checkIfChanged(key, estab[key], alteracoes[key]));
     }
 
     if (campos.length === 0) {
-        return (
-            <View style={styles.noChangeContainer}>
-                <Text style={styles.noChangeText}>
-                    ⚠️ Os dados enviados são idênticos aos atuais do estabelecimento.
-                </Text>
-            </View>
-        );
+      return (
+        <View style={styles.noChangeContainer}>
+          <Text style={styles.noChangeText}>
+            ⚠️ Os dados enviados são idênticos aos atuais do estabelecimento.
+          </Text>
+        </View>
+      );
     }
 
     return (
       <View style={{ marginTop: 10 }}>
         {campos.map((campo) => {
           const valorNovo = alteracoes[campo];
-          const valorAntigo = estab ? estab[campo] : null; 
-          
+          const valorAntigo = estab ? estab[campo] : null;
+
           const isImageField = campo.includes("foto") || campo.includes("img");
           const label = fieldLabels[campo] || campo;
 
           return (
             <View key={campo} style={styles.changeCard}>
               <Text style={styles.fieldTitle}>{label}</Text>
-              
+
               <View style={styles.comparisonContainer}>
                 {solicitacao.tipo === "editar" && (
                   <View style={[styles.compareBox, styles.boxOld]}>
@@ -200,7 +200,7 @@ export default function AdminDetalheSolicitacao({ route, navigation }) {
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Justificativa:</Text>
           <View style={styles.justificationBox}>
-             <Text style={styles.bodyText}>{solicitacao.justificativa}</Text>
+            <Text style={styles.bodyText}>{solicitacao.justificativa}</Text>
           </View>
         </View>
 
@@ -212,13 +212,13 @@ export default function AdminDetalheSolicitacao({ route, navigation }) {
         {solicitacao.status === "pendente" && (
           <View style={styles.actionsContainer}>
             <View style={styles.divider} />
-            <ButtonMAI 
-              name="Aprovar Alterações" 
-              onPress={aceitar} 
+            <ButtonMAI
+              name="Aprovar Alterações"
+              onPress={aceitar}
               style={{ backgroundColor: '#28a745', marginBottom: 20 }}
             />
             <View style={styles.rejectContainer}>
-              <Text style={{fontWeight:'bold', color: theme.COLORS.RED1, marginBottom: 5}}>
+              <Text style={{ fontWeight: 'bold', color: theme.COLORS.RED1, marginBottom: 5 }}>
                 Rejeitar solicitação?
               </Text>
               <TextInputMAI
@@ -232,7 +232,7 @@ export default function AdminDetalheSolicitacao({ route, navigation }) {
                 name="Confirmar Rejeição"
                 onPress={rejeitar}
                 limpo={true}
-                style={{borderColor: theme.COLORS.RED1, borderWidth: 1}}
+                style={{ borderColor: theme.COLORS.RED1, borderWidth: 1 }}
                 textColor={theme.COLORS.RED1}
               />
             </View>
@@ -244,9 +244,9 @@ export default function AdminDetalheSolicitacao({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  headerTitle: { fontSize: 22, fontWeight: "bold", color: "#333" },
+  headerTitle: { fontSize: 22, fontWeight: "bold", color: theme.COLORS.BLACK1 },
   typeBadge: {
-    backgroundColor: theme.COLORS.BLUE1 || "#007BFF",
+    backgroundColor: theme.COLORS.BLUE1,
     alignSelf: 'flex-start',
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -256,18 +256,18 @@ const styles = StyleSheet.create({
   },
   section: { marginBottom: 10 },
   sectionLabel: {
-    fontSize: 14, fontWeight: "bold", color: "#555",
+    fontSize: 14, fontWeight: "bold", color: theme.COLORS.BLACK2,
     textTransform: 'uppercase', marginBottom: 8,
   },
   justificationBox: {
-    backgroundColor: "#fff", padding: 15, borderRadius: 8,
-    borderLeftWidth: 4, borderLeftColor: '#F0AD4E',
-    shadowColor: "#000", shadowOpacity: 0.05, elevation: 1,
+    backgroundColor: theme.COLORS.WHITE1, padding: 15, borderRadius: 8,
+    borderLeftWidth: 4, borderLeftColor: theme.COLORS.YELLOW1,
+    shadowColor: theme.COLORS.BLACK1, shadowOpacity: 0.05, elevation: 1,
   },
-  bodyText: { fontSize: 15, color: "#444", lineHeight: 22 },
+  bodyText: { fontSize: 15, color: theme.COLORS.BLACK1, lineHeight: 22 },
   changeCard: {
-    backgroundColor: '#fff', borderRadius: 8, padding: 15, marginBottom: 15,
-    borderWidth: 1, borderColor: '#eee', elevation: 2,
+    backgroundColor: theme.COLORS.WHITE2, borderRadius: 8, padding: 15, marginBottom: 15,
+    borderWidth: 1, borderColor: theme.COLORS.BLACK2, elevation: 2,
   },
   fieldTitle: {
     fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 10,

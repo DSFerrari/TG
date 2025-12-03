@@ -24,7 +24,7 @@ const  navegar = useNavigation();
             <Text style={{marginLeft: 10,marginTop:10, color: theme.COLORS.BLACK1}}>Lista de usuários</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={()=> navegar.navigate('AdminEstabs')} style={styles.select}>
-            <Text style={styles.textSelect}>Estabelecimento Pendentes</Text>
+            <Text style={styles.textSelect}>Estabelecimentos Pendentes</Text>
             <Text style={{marginLeft: 10,marginTop:10, color: theme.COLORS.BLACK1}}>Lista de estabelecimentos para aprovar</Text>
         </TouchableOpacity>
 

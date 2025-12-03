@@ -6,14 +6,16 @@ export const styles = StyleSheet.create({
         backgroundColor: theme.COLORS.WHITE3,
                 flex: 1,
                 alignItems: '100%',
-                marginTop: -45
+                marginTop: -45,
+                paddingHorizontal: 20,
     },
     select:{
-        backgroundColor: theme.COLORS.BLUE3,
+        backgroundColor: theme.COLORS.WHITE1,
         padding: 20,
         borderWidth:1,
-        borderColor: theme.COLORS.WHITE1,
-        borderRadius:12
+        borderColor: theme.COLORS.BLACK2,
+        borderRadius:12,
+        marginTop:10,
     },
     textSelect:{
         marginLeft: 10,
