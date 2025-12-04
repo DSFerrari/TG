@@ -6,7 +6,8 @@ export const styles = StyleSheet.create({
         backgroundColor: theme.COLORS.WHITE3,
                 flex: 1,
                 alignItems: '100%',
-                marginTop: -45
+                marginTop: -45,
+                paddingHorizontal:20,
     },
     select:{
         backgroundColor: theme.COLORS.WHITE2,

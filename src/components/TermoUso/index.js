@@ -49,10 +49,6 @@ export default function TermosUsoModal({ visible, onAccept, onClose, apenasLeitu
           <Text style={styles.paragraph}>
             <Text style={styles.bold}>3. Uso das Informações:</Text> Não vendemos seus dados. Eles são usados exclusivamente para melhorar o serviço e para comunicação oficial do aplicativo.
           </Text>
-
-          <Text style={styles.paragraph}>
-            <Text style={styles.bold}>4. Seus Direitos:</Text> Você pode consultar, editar ou solicitar a exclusão dos seus dados a qualquer momento através do menu de configurações.
-          </Text>
           
           <Text style={styles.paragraph}>
             Ao clicar em "Li e Aceito", você concorda com o processamento destes dados conforme descrito acima.
