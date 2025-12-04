@@ -142,7 +142,7 @@ export default function AdminDetalheSolicitacao({ route, navigation }) {
       return (
         <View style={styles.noChangeContainer}>
           <Text style={styles.noChangeText}>
-            ⚠️ Os dados enviados são idênticos aos atuais do estabelecimento.
+            sem alterações
           </Text>
         </View>
       );
@@ -193,7 +193,7 @@ export default function AdminDetalheSolicitacao({ route, navigation }) {
 
         <View style={styles.typeBadge}>
           <Text style={{ color: theme.COLORS.WHITE3, fontWeight: 'bold', fontSize: 12 }}>
-            {solicitacao.tipo === 'novo' ? 'NOVO CADASTRO' : 'EDIÇÃO'}
+            {solicitacao.tipo}
           </Text>
         </View>
 
