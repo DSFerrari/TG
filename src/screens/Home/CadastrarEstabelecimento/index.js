@@ -8,7 +8,6 @@ import {
   FlatList,
   TouchableOpacity,
   Text,
-
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useContext, useEffect } from 'react';
@@ -27,6 +26,8 @@ import { logAction } from '../../../services/logs';
 import theme from '../../../theme';
 import { styles } from './styles';
 
+import RegrasEstabelecimentoModal from '../../../components/RegrasEstabelecimentoModal';
+
 export default function CadastrarEstabelecimento() {
   const [acessibilidade, setAcessibilidade] = useState([]);
   const [image, setImage] = useState(null);
@@ -43,6 +44,9 @@ export default function CadastrarEstabelecimento() {
 
   const { createEstablishment, uploadEstablishmentImage, loadingAuth } = useContext(AppContext);
   const navigation = useNavigation();
+
+  const [aceitouRegras, setAceitouRegras] = useState(false);
+  const [mostrarModalRegras, setMostrarModalRegras] = useState(true);
 
   const formItems = [
     { id: "foto" },
@@ -110,6 +114,15 @@ export default function CadastrarEstabelecimento() {
   };
 
   const handleSave = async () => {
+    if (!aceitouRegras) {
+      Alert.alert(
+        'Regras de cadastro',
+        'Você precisa ler e aceitar as regras de cadastro de estabelecimentos antes de continuar.'
+      );
+      setMostrarModalRegras(true);
+      return;
+    }
+
     if (!estabelecimento || !endereco || !categoria || !image) {
       Alert.alert('Campos Incompletos', 'Preencha todos os obrigatórios (incluindo selecionar uma categoria válida).');
       return;
@@ -264,25 +277,38 @@ export default function CadastrarEstabelecimento() {
   };
 
   return (
-    <TouchableWithoutFeedback onPress={() => {
-        Keyboard.dismiss();
-        setShowCategoryList(false);
-    }}>
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-      >
-        <SafeAreaView style={{ flex: 1 }}>
-          <FlatList
-            data={formItems}
-            keyExtractor={(item) => item.id}
-            renderItem={renderItem}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 30 }}
-            keyboardShouldPersistTaps="handled"
-          />
-        </SafeAreaView>
-      </KeyboardAvoidingView>
-    </TouchableWithoutFeedback>
+    <View style={{ flex: 1 }}>
+      <TouchableWithoutFeedback onPress={() => {
+          Keyboard.dismiss();
+          setShowCategoryList(false);
+      }}>
+        <KeyboardAvoidingView
+          style={styles.container}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <SafeAreaView style={{ flex: 1 }}>
+            <FlatList
+              data={formItems}
+              keyExtractor={(item) => item.id}
+              renderItem={renderItem}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 30 }}
+              keyboardShouldPersistTaps="handled"
+            />
+          </SafeAreaView>
+        </KeyboardAvoidingView>
+      </TouchableWithoutFeedback>
+
+      <RegrasEstabelecimentoModal
+        visible={mostrarModalRegras}
+        onAccept={() => {
+          setAceitouRegras(true);
+          setMostrarModalRegras(false);
+        }}
+        onClose={() => {
+          setMostrarModalRegras(false);
+        }}
+      />
+    </View>
   );
 }
