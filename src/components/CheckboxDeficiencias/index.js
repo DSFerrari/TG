@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, AccessibilityInfo } from 'react-native';
 import theme from '../../theme';
 
@@ -9,98 +9,54 @@ const DEFICIENCIAS_DISPONIVEIS = [
   "Deficiência Intelectual",
 ];
 
-const explodeAndClean = (value) => {
-  if (!value) return [];
-  return String(value)
-    .split(/[,;\/\|]|(\s+e\s+)/i)
-    .map(s => s && String(s).trim())
-    .filter(Boolean);
-};
-
-const normalizeArray = (input) => {
-  if (!input) return [];
-  const arr = Array.isArray(input) ? input : [input];
-
-  const seen = new Set();
-  const result = [];
-
-  arr.flatMap(item => explodeAndClean(item)).forEach(item => {
-    const key = item
-      .normalize('NFKD')
-      .replace(/\p{Diacritic}/gu, '')
-      .toLowerCase();
-
-    if (!seen.has(key)) {
-      seen.add(key);
-
-      const titleCase = item
-        .toLowerCase()
-        .split(' ')
-        .filter(Boolean)
-        .map(s => s[0].toUpperCase() + s.slice(1))
-        .join(' ');
-
-      result.push(titleCase);
-    }
-  });
-
-  return result;
-};
-
 export default function CheckboxDeficiencias({
-  selectedDeficiencias = [],
+  selectedDeficiencias,
   onSelectionChange
 }) {
 
-  const normalizedSelected = useMemo(
-    () => normalizeArray(selectedDeficiencias),
-    [selectedDeficiencias]
-  );
+  const listaSegura = Array.isArray(selectedDeficiencias) ? selectedDeficiencias : [];
 
-  const isSelected = (def) => {
-    const key = def.normalize('NFKD').replace(/\p{Diacritic}/gu, '').toLowerCase();
-    return normalizedSelected.some(s =>
-      s.normalize('NFKD').replace(/\p{Diacritic}/gu, '').toLowerCase() === key
-    );
+  const isSelected = (opcao) => {
+    const termo = opcao.toLowerCase().replace("deficiência ", "").trim();
+    
+    return listaSegura.some(item => {
+      const itemLimpo = String(item).toLowerCase().trim();
+      return itemLimpo.includes(termo); 
+    });
   };
 
   const toggleDeficiencia = (def) => {
-    const current = normalizeArray(selectedDeficiencias);
-    const already = current.findIndex(d =>
-      d.normalize('NFKD').replace(/\p{Diacritic}/gu, '').toLowerCase() ===
-      def.normalize('NFKD').replace(/\p{Diacritic}/gu, '').toLowerCase()
-    );
 
-    let next;
-    let ativado = false;
+    let novaLista;
 
-    if (already >= 0) {
-      next = current.filter((_, idx) => idx !== already);
-    } else {
-      next = [...current, def];
-      ativado = true;
+    if (isSelected(def)) {
+       const termo = def.toLowerCase().replace("deficiência ", "").trim();
+       novaLista = listaSegura.filter(item => {
+          const itemLimpo = String(item).toLowerCase().trim();
+          return !itemLimpo.includes(termo);
+       });
+       AccessibilityInfo.announceForAccessibility(`${def} desmarcada.`);
+    } 
+    else {
+      novaLista = [...listaSegura, def];
+      AccessibilityInfo.announceForAccessibility(`${def} marcada.`);
     }
-
-    onSelectionChange(next);
-
-    AccessibilityInfo.announceForAccessibility(
-      ativado
-        ? `${def} marcada.`
-        : `${def} desmarcada.`
-    );
+    
+    if (onSelectionChange) {
+      onSelectionChange(novaLista);
+    }
   };
 
   return (
     <View
       style={styles.container}
       accessible={true}
-      accessibilityRole="form"
+      accessibilityRole="tab"
       accessibilityLabel="Seleção de deficiências"
     >
       <Text
         style={styles.titulo}
         accessibilityRole="header"
-        accessibilityLabel="Selecione suas deficiências"
       >
         Selecione suas deficiências
       </Text>
@@ -114,10 +70,7 @@ export default function CheckboxDeficiencias({
             style={styles.checkboxContainer}
             onPress={() => toggleDeficiencia(def)}
             accessibilityRole="checkbox"
-            accessibilityLabel={def}
-            accessibilityHint="Toque duas vezes para marcar ou desmarcar"
             accessibilityState={{ checked: selected }}
-            focusable={true}
             activeOpacity={0.6}
           >
             <View style={[
@@ -125,21 +78,11 @@ export default function CheckboxDeficiencias({
               selected && styles.checkboxSelected
             ]}>
               {selected && (
-                <Text
-                  style={styles.checkmark}
-                  accessibilityElementsHidden
-                  importantForAccessibility="no"
-                >
-                  ✓
-                </Text>
+                <Text style={styles.checkmark}>✓</Text>
               )}
             </View>
 
-            <Text
-              style={styles.label}
-              accessibilityElementsHidden
-              importantForAccessibility="no"
-            >
+            <Text style={styles.label}>
               {def}
             </Text>
           </TouchableOpacity>
@@ -155,27 +98,35 @@ const styles = StyleSheet.create({
     padding: 15,
     backgroundColor: theme.COLORS.WHITE3,
     borderRadius: 8,
-    marginBottom: -20
+    marginBottom: 10, 
+    shadowColor: theme.COLORS.BLACK1,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   titulo: {
     fontSize: 16,
     marginBottom: 10,
+    fontWeight: 'bold',
     color: theme.COLORS.BLACK1,
   },
   checkboxContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 6,
+    marginVertical: 8,
+    paddingVertical: 4,
   },
   checkbox: {
-    width: 22,
-    height: 22,
+    width: 24,
+    height: 24,
     borderWidth: 2,
     borderColor: theme.COLORS.BLACK3,
     marginRight: 12,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 4,
+    backgroundColor: theme.COLORS.WHITE3,
   },
   checkboxSelected: {
     backgroundColor: theme.COLORS.BLUE1,
@@ -183,8 +134,9 @@ const styles = StyleSheet.create({
   },
   checkmark: {
     color: theme.COLORS.WHITE3,
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 'bold',
+    marginTop: -2, 
   },
   label: {
     fontSize: 16,

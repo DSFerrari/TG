@@ -292,92 +292,86 @@ export default function AuthProvider({ children }) {
     }
   }
 
-  async function updateProfile(fullName, birthDate, disability) {
-    setLoadingAuth(true);
+async function updateProfile(fullName, birthDate, disability) {
+  setLoadingAuth(true);
 
-    const normalizeDisability = (input) => {
-      if (!input) return [];
-      const arr = Array.isArray(input) ? input : [input];
-      const pieces = arr.flatMap((item) => {
-        if (item == null) return [];
-        return String(item)
-          .split(/[,;\/\|]|(\s+e\s+)/i)
-          .map((p) => p && p.trim())
-          .filter(Boolean);
-      });
+  const normalizeDisability = (input) => {
+    if (!input) return [];
+    const arr = Array.isArray(input) ? input : [input];
+    return arr
+      .filter(item => item && typeof item === "string")
+      .map(item => item.trim())
+      .filter(Boolean);
+  };
 
-      const seen = new Set();
-      const cleaned = [];
+  try {
+    if (!supabase) {
+      Alert.alert("Erro", "Falha na configuração do Supabase.");
+      return false;
+    }
 
-      for (let p of pieces) {
-        const key = p
-          .normalize("NFKD")
-          .replace(/\p{Diacritic}/gu, "")
-          .toLowerCase();
-        if (!seen.has(key)) {
-          seen.add(key);
-          const titleCase = p
-            .toLowerCase()
-            .split(" ")
-            .filter(Boolean)
-            .map((s) => s[0].toUpperCase() + s.slice(1))
-            .join(" ");
-          cleaned.push(titleCase);
-        }
-      }
+    const finalDisability = normalizeDisability(disability);
 
-      return cleaned;
-    };
-
-    try {
-      const normalized = normalizeDisability(disability);
-
-      const { error: clearError } = await supabase.auth.updateUser({
-        data: {
-          disability: [],
-        },
-      });
-
-      if (clearError) {
-        Alert.alert("Erro", "Não foi possível limpar deficiências. Tente novamente.");
-        setLoadingAuth(false);
-        return false;
-      }
-
-      const finalDisability =
-        Array.isArray(normalized) && normalized.length > 0 ? normalized : [];
-
-      const payload = {
+    const updates = {
+      data: {
         full_name: String(fullName || "").trim(),
         birth_date: String(birthDate || "").trim(),
         disability: finalDisability,
-      };
+      },
+    };
 
-      const { data: updatedUser, error } = await supabase.auth.updateUser({
-        data: payload,
-      });
+    const supabasePromise = supabase.auth.updateUser(updates);
 
-      if (error) {
-        Alert.alert("Erro", error.message || "Erro ao atualizar perfil");
-        setLoadingAuth(false);
-        return false;
-      }
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error("Timeout")), 10000);
+    });
 
-      if (updatedUser && updatedUser.user) {
-        setUser(updatedUser.user);
-      } else {
-        const fetched = await supabase.auth.getUser();
-        if (!fetched.error && fetched.data?.user) setUser(fetched.data.user);
-      }
+    const { data, error } = await Promise.race([
+      supabasePromise,
+      timeoutPromise,
+    ]);
 
-      setLoadingAuth(false);
-      return true;
-    } catch (err) {
-      Alert.alert("Erro", err?.message || "Erro desconhecido ao atualizar perfil");
-      setLoadingAuth(false);
+    if (error) {
+      Alert.alert("Erro ao atualizar", error.message || "Falha ao atualizar perfil.");
       return false;
     }
+
+    if (!data || !data.user) {
+      Alert.alert("Erro", "Não foi possível obter os dados do usuário.");
+      return false;
+    }
+
+    setUser(data.user);
+    return true;
+
+  } catch (err) {
+    if (err.message === "Timeout") {
+      setUser(prev => ({
+        ...(prev || {}),
+        user_metadata: {
+          ...(prev?.user_metadata || {}),
+          full_name: fullName,
+          birth_date: birthDate,
+          disability: normalizeDisability(disability),
+        },
+      }));
+
+      Alert.alert(
+        "Informações atualizadas",
+        "Demorou para responder, mas suas informações devem estar salvas."
+      );
+
+      return true;
+    }
+
+    Alert.alert("Erro Inesperado", err.message || "Falha ao atualizar perfil.");
+    return false;
+
+  } finally {
+    setLoadingAuth(false);
   }
+}
+
 
   async function getProfile() {
     const { data, error } = await supabase.auth.getUser();

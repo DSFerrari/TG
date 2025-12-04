@@ -78,18 +78,19 @@ export default function EstabsAdmin() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: theme.COLORS.WHITE2 }}>
         <ActivityIndicator size="large" color={theme.COLORS.BLUE1} />
-        <Text style={{ marginTop: 10 }}>Carregando...</Text>
+        <Text style={{ marginTop: 10, color: theme.COLORS.BLACK3 }}>Carregando...</Text>
       </View>
     );
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.COLORS.WHITE3 }}>
+    <View style={{ flex: 1, backgroundColor: theme.COLORS.WHITE2 }}>
       <FlatList
         data={estabs}
         keyExtractor={(item) => item.id.toString()}
+        contentContainerStyle={{ paddingBottom: 20 }}
         ListHeaderComponent={
           <Text
             style={{
@@ -111,15 +112,17 @@ export default function EstabsAdmin() {
           >
             <View
               style={{
-                margin: 10,
+                marginHorizontal: 15,
+                marginVertical: 8,
                 padding: 15,
-                backgroundColor: "#fff",
+                backgroundColor: theme.COLORS.WHITE3,
                 borderRadius: 10,
-                shadowColor: "#000",
+                shadowColor: theme.COLORS.BLACK1,
                 shadowOpacity: 0.1,
                 shadowRadius: 4,
+                elevation: 3,
                 borderWidth: 1,
-                borderColor: "#eee",
+                borderColor: theme.COLORS.WHITE1,
               }}
             >
               <Text
@@ -132,21 +135,22 @@ export default function EstabsAdmin() {
                 {item.nome}
               </Text>
 
-              <Text style={{ marginTop: 4, color: "#555" }}>
+              <Text style={{ marginTop: 4, color: theme.COLORS.BLACK3 }}> 
                 {item.endereco || "Endereço não informado"}
               </Text>
 
-              <View style={{ flexDirection: "row", marginTop: 10, gap: 10 }}>
+              <View style={{ flexDirection: "row", marginTop: 15, gap: 10 }}>
                 <TouchableOpacity
                   onPress={() => aprovarEstabelecimento(item.id)}
                   style={{
-                    backgroundColor: "#28a745",
-                    padding: 8,
+                    backgroundColor: theme.COLORS.GREEN1,
+                    padding: 10,
                     borderRadius: 8,
                     flex: 1,
+                    elevation: 1,
                   }}
                 >
-                  <Text style={{ textAlign: "center", color: "#fff", fontWeight: "bold" }}>
+                  <Text style={{ textAlign: "center", color: theme.COLORS.WHITE3, fontWeight: "bold" }}>
                     Aprovar
                   </Text>
                 </TouchableOpacity>
@@ -154,13 +158,14 @@ export default function EstabsAdmin() {
                 <TouchableOpacity
                   onPress={() => rejeitarEstabelecimento(item)}
                   style={{
-                    backgroundColor: "#dc3545",
-                    padding: 8,
+                    backgroundColor: theme.COLORS.RED2,
+                    padding: 10,
                     borderRadius: 8,
                     flex: 1,
+                    elevation: 1,
                   }}
                 >
-                  <Text style={{ textAlign: "center", color: "#fff", fontWeight: "bold" }}>
+                  <Text style={{ textAlign: "center", color: theme.COLORS.WHITE3, fontWeight: "bold" }}>
                     Rejeitar
                   </Text>
                 </TouchableOpacity>
@@ -169,7 +174,9 @@ export default function EstabsAdmin() {
           </TouchableOpacity>
         )}
         ListEmptyComponent={() => (
-          <Text style={{ textAlign: "center", marginTop: 30 }}>Nenhum estabelecimento pendente.</Text>
+          <Text style={{ textAlign: "center", marginTop: 30, color: theme.COLORS.BLACK3 }}>
+            Nenhum estabelecimento pendente.
+          </Text>
         )}
       />
     </View>

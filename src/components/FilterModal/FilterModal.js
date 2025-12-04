@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   container: {
-    backgroundColor: "#fff",
+    backgroundColor: theme.COLORS.WHITE3,
     paddingHorizontal: 20,
     paddingTop: 25,
     paddingBottom: 35,
@@ -274,6 +274,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "600",
     marginBottom: 10,
+    color: theme.COLORS.BLACK1,
   },
   clearButton: {
     borderWidth: 1,
@@ -293,10 +294,11 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginTop: 20,
     marginBottom: 6,
+    color: theme.COLORS.BLACK2,
   },
   chip: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: theme.COLORS.WHITE1,
     paddingVertical: 8,
     paddingHorizontal: 14,
     borderRadius: 18,
@@ -307,11 +309,11 @@ const styles = StyleSheet.create({
     borderColor: theme.COLORS.BLUE1,
   },
   chipText: {
-    color: "#444",
+    color: theme.COLORS.BLACK3,
     fontSize: 14,
   },
   chipTextActive: {
-    color: "#fff",
+    color: theme.COLORS.WHITE3,
     fontWeight: "600",
   },
   confirmButton: {
@@ -321,8 +323,7 @@ const styles = StyleSheet.create({
     borderRadius: 25,
   },
   confirmText: {
-    color: "#fff",
-    fontSize: 16,
+    color: theme.COLORS.WHITE3,
     textAlign: "center",
     fontWeight: "600",
   },

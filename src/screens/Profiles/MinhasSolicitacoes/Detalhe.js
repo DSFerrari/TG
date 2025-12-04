@@ -32,7 +32,6 @@ export default function SolicitacaoDetalheUser({ route }) {
             setEstabAtual(data);
           }
         } catch (err) {
-          console.log("Erro ao buscar dados originais:", err);
         }
       }
       setLoading(false);
@@ -125,7 +124,7 @@ export default function SolicitacaoDetalheUser({ route }) {
     if (campos.length === 0) {
        return (
          <View style={styles.emptyContainer}>
-            <Text style={{color: '#888'}}>Nenhuma alteração de dados detectada.</Text>
+            <Text style={{color: theme.COLORS.BLACK3}}>Nenhuma alteração de dados detectada.</Text>
          </View>
        );
     }
@@ -166,9 +165,9 @@ export default function SolicitacaoDetalheUser({ route }) {
   }
 
   const getStatusColor = (s) => {
-      if(s === 'aprovado') return '#28a745';
+      if(s === 'aprovado') return theme.COLORS.GREEN1;
       if(s === 'rejeitado') return theme.COLORS.RED1;
-      return '#ffc107'; 
+      return theme.COLORS.YELLOW2;
   };
 
   const nomeEstabelecimento = 
@@ -190,7 +189,11 @@ export default function SolicitacaoDetalheUser({ route }) {
                 </Text>
             </View>
             <View style={[styles.badge, { backgroundColor: getStatusColor(solicitacao.status) }]}>
-                <Text style={styles.badgeText}>
+                <Text style={[
+                  styles.badgeText, 
+                
+                  { color: solicitacao.status === 'pendente' ? theme.COLORS.BLACK2 : theme.COLORS.WHITE3 }
+                ]}>
                     {solicitacao.status.toUpperCase()}
                 </Text>
             </View>
@@ -231,29 +234,154 @@ export default function SolicitacaoDetalheUser({ route }) {
 }
 
 const styles = StyleSheet.create({
-  headerTitle: { fontSize: 22, fontWeight: "bold", color: "#333", marginBottom: 10 },
-  badgesRow: { flexDirection: 'row', marginBottom: 20, gap: 10 },
-  badge: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 4 },
-  badgeText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
-  section: { marginBottom: 15 },
-  sectionLabel: { fontSize: 14, fontWeight: "bold", color: "#555", textTransform: 'uppercase', marginBottom: 8 },
-  justificationBox: { backgroundColor: "#fff", padding: 15, borderRadius: 8, borderWidth: 1, borderColor: "#EEE" },
-  adminResponseBox: { backgroundColor: "#fff", padding: 15, borderRadius: 8, borderLeftWidth: 5, shadowColor: "#000", shadowOpacity: 0.05, elevation: 2 },
-  bodyText: { fontSize: 15, color: "#444", lineHeight: 22 },
-  dateText: { fontSize: 12, color: "#999", marginTop: 10, fontStyle: 'italic' },
-  changeCard: { backgroundColor: '#fff', borderRadius: 8, padding: 15, marginBottom: 15, borderWidth: 1, borderColor: '#eee', elevation: 2 },
-  fieldTitle: { fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 10, borderBottomWidth: 1, borderBottomColor: '#f0f0f0', paddingBottom: 5 },
-  comparisonContainer: { flexDirection: 'column', gap: 10 },
-  compareBox: { padding: 10, borderRadius: 6, borderWidth: 1 },
-  boxOld: { backgroundColor: '#f9f9f9', borderColor: '#e0e0e0' },
-  boxNew: { backgroundColor: '#f0f8ff', borderColor: '#d0e0ff' },
-  boxHeader: { fontSize: 10, fontWeight: '900', color: '#888', marginBottom: 5, textTransform: 'uppercase', letterSpacing: 1 },
-  valueText: { fontSize: 15, color: '#222' },
-  missingText: { fontStyle: 'italic', color: '#999', fontSize: 13 },
-  imageContainer: { marginTop: 5, borderRadius: 6, overflow: 'hidden', borderWidth: 1, borderColor: '#ddd' },
-  previewImage: { width: '100%', height: 150, backgroundColor: '#eee' },
-  tagsContainer: { flexDirection: "row", flexWrap: "wrap", marginTop: 2 },
-  tag: { backgroundColor: "#fff", borderRadius: 15, paddingHorizontal: 10, paddingVertical: 4, marginRight: 6, marginBottom: 6, borderWidth: 1, borderColor: "#ccc" },
-  tagText: { fontSize: 12, color: "#555" },
-  emptyContainer: { padding: 15, alignItems: 'center', justifyContent: 'center', borderStyle: 'dashed', borderWidth: 1, borderColor: '#ccc', borderRadius: 8 }
+  headerTitle: { 
+    fontSize: 22, 
+    fontWeight: "bold", 
+    color: theme.COLORS.BLACK1,
+    marginBottom: 10 
+  },
+  badgesRow: { 
+    flexDirection: 'row', 
+    marginBottom: 20, 
+    gap: 10 
+  },
+  badge: { 
+    paddingHorizontal: 12, 
+    paddingVertical: 5, 
+    borderRadius: 4 
+  },
+  badgeText: { 
+    color: theme.COLORS.WHITE3, 
+    fontSize: 12, 
+    fontWeight: 'bold' 
+  },
+  section: { 
+    marginBottom: 15 
+  },
+  sectionLabel: { 
+    fontSize: 14, 
+    fontWeight: "bold", 
+    color: theme.COLORS.BLACK2,
+    textTransform: 'uppercase', 
+    marginBottom: 8 
+  },
+  justificationBox: { 
+    backgroundColor: theme.COLORS.WHITE3,
+    padding: 15, 
+    borderRadius: 8, 
+    borderWidth: 1, 
+    borderColor: theme.COLORS.WHITE1
+  },
+  adminResponseBox: { 
+    backgroundColor: theme.COLORS.WHITE3, 
+    padding: 15, 
+    borderRadius: 8, 
+    borderLeftWidth: 5, 
+    shadowColor: theme.COLORS.BLACK1, 
+    shadowOpacity: 0.05, 
+    elevation: 2 
+  },
+  bodyText: { 
+    fontSize: 15, 
+    color: theme.COLORS.BLACK3,
+    lineHeight: 22 
+  },
+  dateText: { 
+    fontSize: 12, 
+    color: theme.COLORS.BLACK3,
+    marginTop: 10, 
+    fontStyle: 'italic' 
+  },
+  changeCard: { 
+    backgroundColor: theme.COLORS.WHITE3, 
+    borderRadius: 8, 
+    padding: 15, 
+    marginBottom: 15, 
+    borderWidth: 1, 
+    borderColor: theme.COLORS.WHITE1,
+    elevation: 2 
+  },
+  fieldTitle: { 
+    fontSize: 16, 
+    fontWeight: 'bold', 
+    color: theme.COLORS.BLACK1,
+    marginBottom: 10, 
+    borderBottomWidth: 1, 
+    borderBottomColor: theme.COLORS.WHITE1, 
+    paddingBottom: 5 
+  },
+  comparisonContainer: { 
+    flexDirection: 'column', 
+    gap: 10 
+  },
+  compareBox: { 
+    padding: 10, 
+    borderRadius: 6, 
+    borderWidth: 1 
+  },
+  boxOld: { 
+    backgroundColor: theme.COLORS.WHITE1,
+    borderColor: theme.COLORS.WHITE1 
+  },
+  boxNew: { 
+    backgroundColor: theme.COLORS.WHITE3,
+    borderColor: theme.COLORS.BLUE2 
+  },
+  boxHeader: { 
+    fontSize: 10, 
+    fontWeight: '900', 
+    color: theme.COLORS.BLACK3,
+    marginBottom: 5, 
+    textTransform: 'uppercase', 
+    letterSpacing: 1 
+  },
+  valueText: { 
+    fontSize: 15, 
+    color: theme.COLORS.BLACK1
+  },
+  missingText: { 
+    fontStyle: 'italic', 
+    color: theme.COLORS.BLACK3,
+    fontSize: 13 
+  },
+  imageContainer: { 
+    marginTop: 5, 
+    borderRadius: 6, 
+    overflow: 'hidden', 
+    borderWidth: 1, 
+    borderColor: theme.COLORS.WHITE1 
+  },
+  previewImage: { 
+    width: '100%', 
+    height: 150, 
+    backgroundColor: theme.COLORS.WHITE1 
+  },
+  tagsContainer: { 
+    flexDirection: "row", 
+    flexWrap: "wrap", 
+    marginTop: 2 
+  },
+  tag: { 
+    backgroundColor: theme.COLORS.WHITE3, 
+    borderRadius: 15, 
+    paddingHorizontal: 10, 
+    paddingVertical: 4, 
+    marginRight: 6, 
+    marginBottom: 6, 
+    borderWidth: 1, 
+    borderColor: theme.COLORS.WHITE1
+  },
+  tagText: { 
+    fontSize: 12, 
+    color: theme.COLORS.BLACK3
+  },
+  emptyContainer: { 
+    padding: 15, 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    borderStyle: 'dashed', 
+    borderWidth: 1, 
+    borderColor: theme.COLORS.WHITE1, 
+    borderRadius: 8 
+  }
 });

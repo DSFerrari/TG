@@ -12,10 +12,10 @@ import {
 } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons'; 
+import { useNavigation } from "@react-navigation/native";
 
 import { AppContext } from "../../../contexts/app";
-
-import theme from "../../../theme"
+import theme from "../../../theme";
 
 export default function MeusEstabelecimentos() {
   const { 
@@ -24,9 +24,13 @@ export default function MeusEstabelecimentos() {
     deleteEstablishment 
   } = useContext(AppContext);
 
+  const navigation = useNavigation();
+
   const [loading, setLoading] = useState(true);
   const [estabelecimentos, setEstabelecimentos] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false); 
+  const [selectedEstab, setSelectedEstab] = useState(null);
 
   const fetchData = async () => {
     const data = await getMyEstablishments();
@@ -51,7 +55,7 @@ export default function MeusEstabelecimentos() {
           onPress: async () => {
             const success = await deleteEstablishment(item);
             
-            if(success) {
+            if (success) {
               setEstabelecimentos(prev => prev.filter(e => e.id !== item.id));
               Alert.alert("Sucesso", "Estabelecimento excluído.");
             }
@@ -62,11 +66,11 @@ export default function MeusEstabelecimentos() {
   };
 
   const getStatusColor = (status) => {
-    switch(status) {
-        case 'aprovado': return '#4CAF50';
-        case 'pendente': return '#FF9800';
-        case 'rejeitado': return '#F44336';
-        default: return '#999';
+    switch (status) {
+      case 'aprovado': return theme.COLORS.GREEN1;
+      case 'pendente': return theme.COLORS.YELLOW2;
+      case 'rejeitado': return theme.COLORS.RED1;
+      default: return theme.COLORS.BLACK3;
     }
   };
 
@@ -75,35 +79,44 @@ export default function MeusEstabelecimentos() {
     setModalVisible(true);
   };
 
-  const renderItem = ({ item }) => (
-    <View style={styles.card}>
-      <Image 
-        source={{ 
-            uri: item.url_foto || "https://placehold.co/600x400/png?text=Sem+Foto" 
-        }} 
-        style={styles.cardImage} 
-      />
+  const handleOpenDetails = (item) => {
+    navigation.navigate("Início", {
+      screen: "Detalhes",
+      params: { estabelecimento: item },
+    });
+  };
 
-      <View style={styles.cardContent}>
-        <View style={styles.headerRow}>
+  const renderItem = ({ item }) => (
+    <TouchableOpacity onPress={() => handleOpenDetails(item)}>
+      <View style={styles.card}>
+        <Image 
+          source={{ 
+            uri: item.url_foto || "https://placehold.co/600x400/png?text=Sem+Foto" 
+          }} 
+          style={styles.cardImage} 
+        />
+
+        <View style={styles.cardContent}>
+          <View style={styles.headerRow}>
             <Text style={styles.estabName} numberOfLines={1}>{item.nome}</Text>
             
             <TouchableOpacity onPress={() => handleDelete(item)} style={{ padding: 5 }}>
-                <Ionicons name="trash-outline" size={22} color="#FF4444" />
+              <Ionicons name="trash-outline" size={22} color={theme.COLORS.RED2} />
             </TouchableOpacity>
-        </View>
+          </View>
 
-        <Text style={styles.address} numberOfLines={1}>
+          <Text style={styles.address} numberOfLines={1}>
             {item.endereco || "Endereço não informado"}
-        </Text>
+          </Text>
 
-        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
+          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
             <Text style={styles.statusText}>
-                {item.status ? item.status.toUpperCase() : "DESCONHECIDO"}
+              {item.status ? item.status.toUpperCase() : "DESCONHECIDO"}
             </Text>
+          </View>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   return (
@@ -111,7 +124,7 @@ export default function MeusEstabelecimentos() {
       <Text style={styles.screenTitle}>Meus Locais</Text>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#000" style={{ marginTop: 20 }} />
+        <ActivityIndicator size="large" color={theme.COLORS.BLUE1} style={{ marginTop: 20 }} />
       ) : (
         <FlatList
           data={estabelecimentos}
@@ -123,10 +136,13 @@ export default function MeusEstabelecimentos() {
             <Text style={styles.emptyText}>Você ainda não cadastrou nenhum local.</Text>
           }
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={() => {
-              setRefreshing(true);
-              fetchData();
-            }} />
+            <RefreshControl 
+              refreshing={refreshing} 
+              onRefresh={() => {
+                setRefreshing(true);
+                fetchData();
+              }} 
+            />
           }
         />
       )}
@@ -135,28 +151,77 @@ export default function MeusEstabelecimentos() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.COLORS.WHITE3 },
-  screenTitle: { fontSize: 22, fontWeight: 'bold', margin: 20, color: '#333' },
-  listContent: { paddingHorizontal: 20, paddingBottom: 20 },
+  container: { 
+    flex: 1, 
+    backgroundColor: theme.COLORS.WHITE2 
+  },
+  screenTitle: { 
+    fontSize: 22, 
+    fontWeight: 'bold', 
+    margin: 20, 
+    color: theme.COLORS.BLACK1 
+  },
+  listContent: { 
+    paddingHorizontal: 20, 
+    paddingBottom: 20 
+  },
   card: {
-    backgroundColor: theme.COLORS.WHITE1,
+    backgroundColor: theme.COLORS.WHITE3,
     borderRadius: 12,
     marginBottom: 16,
     overflow: 'hidden',
     flexDirection: 'row',
     height: 110,
-    shadowColor: "#000",
+    shadowColor: theme.COLORS.BLACK1,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    borderWidth: 1,
+    borderColor: theme.COLORS.WHITE1,
   },
-  cardImage: { width: 110, height: '100%', resizeMode: 'cover' },
-  cardContent: { flex: 1, padding: 12, justifyContent: 'space-between' },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  estabName: { fontSize: 16, fontWeight: 'bold', color: '#222', flex: 1, marginRight: 8 },
-  address: { fontSize: 12, color: '#666' },
-  statusBadge: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, marginTop: 6 },
-  statusText: { color: '#FFF', fontSize: 10, fontWeight: 'bold' },
-  emptyText: { textAlign: 'center', color: '#999', marginTop: 40, fontSize: 16 }
+  cardImage: { 
+    width: 110, 
+    height: '100%', 
+    resizeMode: 'cover' 
+  },
+  cardContent: { 
+    flex: 1, 
+    padding: 12, 
+    justifyContent: 'space-between' 
+  },
+  headerRow: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center' 
+  },
+  estabName: { 
+    fontSize: 16, 
+    fontWeight: 'bold', 
+    color: theme.COLORS.BLACK1, 
+    flex: 1, 
+    marginRight: 8 
+  },
+  address: { 
+    fontSize: 12, 
+    color: theme.COLORS.BLACK3 
+  },
+  statusBadge: { 
+    alignSelf: 'flex-start', 
+    paddingHorizontal: 8, 
+    paddingVertical: 4, 
+    borderRadius: 4, 
+    marginTop: 6 
+  },
+  statusText: { 
+    color: theme.COLORS.WHITE3, 
+    fontSize: 10, 
+    fontWeight: 'bold' 
+  },
+  emptyText: { 
+    textAlign: 'center', 
+    color: theme.COLORS.BLACK3, 
+    marginTop: 40, 
+    fontSize: 16 
+  }
 });

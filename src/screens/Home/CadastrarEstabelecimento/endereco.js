@@ -69,7 +69,6 @@ export default function EnderecoAutocomplete({ endereco, setEndereco, setCoords 
         longitude: location.lng,
       });
     } catch (error) {
-      console.log("Erro ao buscar detalhes:", error);
     }
   };
 

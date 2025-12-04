@@ -11,6 +11,8 @@ import {
 import { Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 
+import theme from '../../theme';
+
 export default function FotoEstabelecimento({ image, setImage }) {
 
   const takePhoto = async () => {
@@ -106,7 +108,7 @@ export default function FotoEstabelecimento({ image, setImage }) {
         />
       ) : (
         <>
-          <Feather name="upload" size={40} color="#666" />
+          <Feather name="upload" size={40} color={theme.COLORS.BLACK3} />
           <Text
             style={styles.text}
             accessibilityLabel="Botão para enviar imagem"
@@ -124,12 +126,12 @@ const styles = StyleSheet.create({
     width: '90%',
     height: 200,
     borderRadius: 8,
-    backgroundColor: '#f4f4f4',
+    backgroundColor: theme.COLORS.WHITE2,
     justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'center',
     borderWidth: 2,
-    borderColor: '#ddd',
+    borderColor: theme.COLORS.WHITE1,
     borderStyle: 'dashed',
     marginBottom: 20,
     overflow: 'hidden',
@@ -142,6 +144,6 @@ const styles = StyleSheet.create({
   text: {
     marginTop: 10,
     fontSize: 16,
-    color: '#666',
+    color: theme.COLORS.BLACK3,
   },
 });

@@ -2,7 +2,6 @@ import { createContext, useState, useEffect } from "react";
 import { supabase } from "../services/supabase";
 import { Alert } from "react-native";
 import { decode } from "base64-arraybuffer";
-import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
 
 export const AppContext = createContext({});
 
@@ -51,7 +50,6 @@ export default function AppProvider({ children }) {
       return data;
 
     } catch (err) {
-      console.log("Erro ao buscar perfil:", err);
       return null;
     }
   }

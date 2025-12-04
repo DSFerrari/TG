@@ -83,7 +83,7 @@ export default function DetalhesModal({ visible, onClose, estabelecimento }) {
           <View style={styles.modalHeader}>
             <View style={styles.dragIndicator} />
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Ionicons name="close-circle" size={30} color="#ccc" />
+              <Ionicons name="close-circle" size={30} color={theme.COLORS.BLACK3} />
             </TouchableOpacity>
           </View>
 
@@ -104,7 +104,10 @@ export default function DetalhesModal({ visible, onClose, estabelecimento }) {
               {estabelecimento.status && (
                 <View style={styles.statusContainer}>
                    <Text style={styles.statusLabel}>Status: </Text>
-                   <Text style={{ fontWeight: 'bold', color: estabelecimento.status === 'aprovado' ? 'green' : 'orange' }}>
+                   <Text style={{ 
+                     fontWeight: 'bold', 
+                     color: estabelecimento.status === 'aprovado' ? theme.COLORS.GREEN1 : theme.COLORS.YELLOW2 
+                   }}>
                       {estabelecimento.status.toUpperCase()}
                    </Text>
                 </View>
@@ -177,10 +180,10 @@ export default function DetalhesModal({ visible, onClose, estabelecimento }) {
                   <ButtonMAI
                     name="Excluir"
                     icon="trash-outline"
-                    color="#FF4444" 
+                    color={theme.COLORS.RED2} 
                     onPress={handleExcluir}
-                    style={{ marginTop: 10, backgroundColor: '#FFE5E5' }}
-                    textStyle={{ color: '#FF4444' }}
+                    style={{ marginTop: 10, backgroundColor: theme.COLORS.WHITE1 }}
+                    textStyle={{ color: theme.COLORS.RED2 }}
                   />
               </View>
             </View>
@@ -195,11 +198,11 @@ export default function DetalhesModal({ visible, onClose, estabelecimento }) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.5)', 
     justifyContent: 'flex-end',
   },
   modalContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.COLORS.WHITE3,
     height: height * 0.85, 
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
@@ -209,15 +212,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: theme.COLORS.WHITE1,
     position: 'relative',
-    backgroundColor: '#fff',
+    backgroundColor: theme.COLORS.WHITE3,
     zIndex: 1,
   },
   dragIndicator: {
     width: 40,
     height: 5,
-    backgroundColor: '#ccc',
+    backgroundColor: theme.COLORS.WHITE1,
     borderRadius: 3,
   },
   closeButton: {
@@ -243,12 +246,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#333',
+    color: theme.COLORS.BLACK1,
     flex: 1,
   },
   category: {
     fontSize: 14,
-    color: '#666',
+    color: theme.COLORS.BLACK3,
     marginBottom: 5,
     fontStyle: 'italic',
   },
@@ -257,7 +260,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   statusLabel: {
-    color: '#666',
+    color: theme.COLORS.BLACK3,
   },
   section: {
     marginBottom: 20,
@@ -265,12 +268,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
+    color: theme.COLORS.BLACK2,
     marginBottom: 5,
   },
   itemText: {
     fontSize: 14,
-    color: '#555',
+    color: theme.COLORS.BLACK3,
     lineHeight: 22,
   },
   ratingContainer: {

@@ -3,129 +3,137 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
+  View,
+  Keyboard
 } from "react-native";
-import { AuthContext } from "../../../../contexts/auth";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
+
+import { AuthContext } from "../../../../contexts/auth";
+import theme from "../../../../theme";
+
 import TextInputMAI from "../../../../components/TextInputMAI";
 import CheckboxDeficiencias from "../../../../components/CheckboxDeficiencias";
 import ButtonMAI from "../../../../components/ButtonMAI";
-import { styles } from "./styles";
 
-export default function Informacoes({ navigation }) {
+export default function Informacoes() {
+  const navigation = useNavigation();
   const { user, updateProfile, loadingAuth } = useContext(AuthContext);
 
-  const [nome, setNome] = useState(user?.user_metadata?.full_name || "");
-  const [dataNascimento, setDataNascimento] = useState("")
+  const [nome, setNome] = useState("");
+  const [dataNascimento, setDataNascimento] = useState("");
   const [deficiencia, setDeficiencia] = useState([]);
 
-   const formatarDataInicial = (dateStr) => {
-    if (!dateStr) 
-    return "";
-   if (dateStr.includes("/")) return dateStr;
+  useEffect(() => {
+    if (user?.user_metadata) {
+      const { full_name, birth_date, disability } = user.user_metadata;
+
+      setNome(full_name || "");
+      setDataNascimento(formatarDataDoBanco(birth_date));
+
+      if (Array.isArray(disability)) {
+        setDeficiencia(disability);
+      } else if (typeof disability === "string") {
+        setDeficiencia(
+          disability
+            .split(",")
+            .map(s => s.trim())
+            .filter(Boolean)
+        );
+      } else {
+        setDeficiencia([]);
+      }
+    }
+  }, [user]);
+
+  
+
+  const formatarDataDoBanco = (dateStr) => {
+    if (!dateStr) return "";
+    if (dateStr.includes("/")) return dateStr;
     const parts = dateStr.split("-");
     if (parts.length !== 3) return dateStr;
     const [ano, mes, dia] = parts;
-    return `${dia.padStart(2, "0")}/${mes.padStart(2, "0")}/${ano}`;
+    return `${dia}/${mes}/${ano}`;
   };
 
-  useEffect(() => {
-    const bd = user?.user_metadata?.birth_date;
-    if (bd) {
-      setDataNascimento(formatarDataInicial(bd));
-    }
-}, [user?.user_metadata?.birth_date]);
+  const mascaraData = (text) => {
+    let v = text.replace(/\D/g, "");
+    if (v.length > 2) v = v.replace(/^(\d{2})(\d)/g, "$1/$2");
+    if (v.length > 5) v = v.replace(/^(\d{2})\/(\d{2})(\d)/g, "$1/$2/$3");
+    setDataNascimento(v);
+  };
 
- useEffect(() => {
-    const raw =
-      user?.user_metadata?.disability
+  const converterDataParaSalvar = (dataInput) => {
+    if (!dataInput || dataInput.length !== 10) return null;
+    const [dia, mes, ano] = dataInput.split("/");
 
-    if (!raw) {
-     setDeficiencia([]);
-      return;
-    }
+    const d = parseInt(dia, 10);
+    const m = parseInt(mes, 10);
+    const a = parseInt(ano, 10);
 
-    if (Array.isArray(raw)) {
-      setDeficiencia(raw);
-    } else if (typeof raw === "string") {
-      const arr = raw
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean);
-      setDeficiencia(arr);
-    } else {
-      setDeficiencia([]);
-    }
-  }, [user?.user_metadata]);
+    if (!d || !m || !a || m > 12 || m < 1 || d > 31 || d < 1) return null;
 
-  const formatarData = (text) => {
-    const numeros = text.replace(/\D/g, "");
+    const diaPad = dia.padStart(2, "0");
+    const mesPad = mes.padStart(2, "0");
 
-    let formatado = numeros;
-
-    if (numeros.length >= 3) {
-      formatado = numeros.slice(0, 2) + "/" + numeros.slice(2);
-    }
-    if (numeros.length >= 5) {
-      formatado =
-        numeros.slice(0, 2) +
-        "/" +
-        numeros.slice(2, 4) +
-        "/" +
-        numeros.slice(4, 8);
-    }
-
-    setDataNascimento(formatado);
+    return `${ano}-${mesPad}-${diaPad}`;
   };
 
   const handleSave = async () => {
-    if (!nome.trim()) {
-      Alert.alert("Erro", "Nome é obrigatório");
-      return;
-    }
+  
+  if (loadingAuth) {
+    return;
+  }
 
-    const dataFormatada = converterData(dataNascimento);
-    if (!dataFormatada) {
-      Alert.alert("Erro", "Data de nascimento inválida!");
-      return;
-    }
+  Keyboard.dismiss();
 
-    const success = await updateProfile(
-      nome,
-      dataFormatada,
-      deficiencia
-    );
+  if (!nome.trim()) {
+    Alert.alert("Atenção", "O nome é obrigatório.");
+    return;
+  }
 
-    if (success) {
-      Alert.alert("Sucesso", "Informações atualizadas com sucesso!", [
-        { text: "OK", onPress: () => navigation.goBack() },
-      ]);
-    }
-  };
+  const dataFormatadaISO = converterDataParaSalvar(dataNascimento);
 
-  const converterData = (dataInput) => {
-    if (dataInput.length !== 10) return null;
+  if (!dataFormatadaISO) {
+    Alert.alert("Atenção", "Data inválida. Use o formato DD/MM/AAAA.");
+    return;
+  }
 
-    const [dia, mes, ano] = dataInput.split("/");
-    const data = new Date(ano, mes - 1, dia);
+  const success = await updateProfile(
+    nome,
+    dataFormatadaISO,
+    deficiencia
+  );
 
-    if (isNaN(data.getTime())) return null;
+  if (success) {
+    Alert.alert("Sucesso", "Informações atualizadas!", [
+      { text: "OK", onPress: () => navigation.goBack() },
+    ]);
+  }
+};
 
-    return `${ano}-${mes.padStart(2, "0")}-${dia.padStart(2, "0")}`;
-  };
+useEffect(() => {
+}, [loadingAuth]);
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent} 
+        showsVerticalScrollIndicator={false}
+      >
         <TextInputMAI
           texto="Nome Completo"
           value={nome}
           onChangeText={setNome}
+          placeholder="Digite seu nome"
         />
+        
         <TextInputMAI
           texto="Data de nascimento"
-          placeholder="dd/mm/aaaa"
+          placeholder="DD/MM/AAAA"
           value={dataNascimento}
-          onChangeText={formatarData}
+          onChangeText={mascaraData}
           keyboardType="numeric"
           maxLength={10}
         />
@@ -135,9 +143,29 @@ export default function Informacoes({ navigation }) {
           onSelectionChange={setDeficiencia}
         />
 
-        <ButtonMAI name="Alterar" limpo={true} onPress={handleSave} />
+        <View style={styles.buttonContainer}>
+          <ButtonMAI 
+            name={loadingAuth ? "Salvando..." : "Salvar Alterações"} 
+            onPress={handleSave}
+            disabled={loadingAuth}
+          />
+        </View>
+
       </ScrollView>
     </SafeAreaView>
   );
 }
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: theme.COLORS.WHITE3,
+  },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 40,
+  },
+  buttonContainer: {
+    marginTop: 20,
+  }
+});

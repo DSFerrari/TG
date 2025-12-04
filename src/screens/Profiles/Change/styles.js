@@ -14,7 +14,7 @@ export const styles = StyleSheet.create({
     paddingVertical: 12,
     backgroundColor: theme.COLORS.WHITE3,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
+    borderBottomColor: theme.COLORS.WHITE1,
   },
   backButton: {
     padding: 8,
@@ -22,7 +22,7 @@ export const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#000',
+    color: theme.COLORS.BLACK1,
   },
   placeholder: {
     width: 40,
@@ -38,22 +38,22 @@ export const styles = StyleSheet.create({
   userEmail: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#000',
+    color: theme.COLORS.BLACK1,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 14,
-    color: '#666',
+    color: theme.COLORS.BLACK3,
     textAlign: 'center',
   },
   optionsContainer: {
     gap: 12,
   },
   optionCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.COLORS.WHITE3,
     borderRadius: 12,
     padding: 16,
-    shadowColor: '#000',
+    shadowColor: theme.COLORS.BLACK1,
     shadowOffset: {
       width: 0,
       height: 1,
@@ -80,17 +80,17 @@ export const styles = StyleSheet.create({
   optionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
+    color: theme.COLORS.BLACK1,
     marginBottom: 4,
   },
   optionSubtitle: {
     fontSize: 13,
-    color: '#666',
+    color: theme.COLORS.BLACK3,
     marginBottom: 4,
   },
   currentValue: {
     fontSize: 12,
-    color: '#999',
+    color: theme.COLORS.BLACK3,
     fontStyle: 'italic',
   },
 });

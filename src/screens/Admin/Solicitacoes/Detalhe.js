@@ -192,7 +192,7 @@ export default function AdminDetalheSolicitacao({ route, navigation }) {
         </Text>
 
         <View style={styles.typeBadge}>
-          <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>
+          <Text style={{ color: theme.COLORS.WHITE3, fontWeight: 'bold', fontSize: 12 }}>
             {solicitacao.tipo === 'novo' ? 'NOVO CADASTRO' : 'EDIÇÃO'}
           </Text>
         </View>
@@ -215,7 +215,7 @@ export default function AdminDetalheSolicitacao({ route, navigation }) {
             <ButtonMAI
               name="Aprovar Alterações"
               onPress={aceitar}
-              style={{ backgroundColor: '#28a745', marginBottom: 20 }}
+              style={{ backgroundColor: theme.COLORS.GREEN1, marginBottom: 20 }}
             />
             <View style={styles.rejectContainer}>
               <Text style={{ fontWeight: 'bold', color: theme.COLORS.RED1, marginBottom: 5 }}>
@@ -244,7 +244,11 @@ export default function AdminDetalheSolicitacao({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  headerTitle: { fontSize: 22, fontWeight: "bold", color: theme.COLORS.BLACK1 },
+  headerTitle: { 
+    fontSize: 22, 
+    fontWeight: "bold", 
+    color: theme.COLORS.BLACK1 
+  },
   typeBadge: {
     backgroundColor: theme.COLORS.BLUE1,
     alignSelf: 'flex-start',
@@ -254,56 +258,146 @@ const styles = StyleSheet.create({
     marginTop: 5,
     marginBottom: 20,
   },
-  section: { marginBottom: 10 },
+  section: { 
+    marginBottom: 10 
+  },
   sectionLabel: {
-    fontSize: 14, fontWeight: "bold", color: theme.COLORS.BLACK2,
-    textTransform: 'uppercase', marginBottom: 8,
+    fontSize: 14, 
+    fontWeight: "bold", 
+    color: theme.COLORS.BLACK2,
+    textTransform: 'uppercase', 
+    marginBottom: 8,
   },
   justificationBox: {
-    backgroundColor: theme.COLORS.WHITE1, padding: 15, borderRadius: 8,
-    borderLeftWidth: 4, borderLeftColor: theme.COLORS.YELLOW1,
-    shadowColor: theme.COLORS.BLACK1, shadowOpacity: 0.05, elevation: 1,
+    backgroundColor: theme.COLORS.WHITE2,
+    padding: 15, 
+    borderRadius: 8,
+    borderLeftWidth: 4, 
+    borderLeftColor: theme.COLORS.YELLOW1,
+    shadowColor: theme.COLORS.BLACK1, 
+    shadowOpacity: 0.05, 
+    elevation: 1,
   },
-  bodyText: { fontSize: 15, color: theme.COLORS.BLACK1, lineHeight: 22 },
+  bodyText: { 
+    fontSize: 15, 
+    color: theme.COLORS.BLACK1, 
+    lineHeight: 22 
+  },
   changeCard: {
-    backgroundColor: theme.COLORS.WHITE2, borderRadius: 8, padding: 15, marginBottom: 15,
-    borderWidth: 1, borderColor: theme.COLORS.BLACK2, elevation: 2,
+    backgroundColor: theme.COLORS.WHITE3, 
+    borderRadius: 8, 
+    padding: 15, 
+    marginBottom: 15,
+    borderWidth: 1, 
+    borderColor: theme.COLORS.WHITE1,
+    elevation: 2,
+    shadowColor: theme.COLORS.BLACK1,
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   fieldTitle: {
-    fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 10,
-    borderBottomWidth: 1, borderBottomColor: '#f0f0f0', paddingBottom: 5
+    fontSize: 16, 
+    fontWeight: 'bold', 
+    color: theme.COLORS.BLACK1, 
+    marginBottom: 10,
+    borderBottomWidth: 1, 
+    borderBottomColor: theme.COLORS.WHITE1, 
+    paddingBottom: 5
   },
-  comparisonContainer: { flexDirection: 'column', gap: 10 },
-  compareBox: { padding: 10, borderRadius: 6, borderWidth: 1 },
-  boxOld: { backgroundColor: '#f9f9f9', borderColor: '#e0e0e0' },
-  boxNew: { backgroundColor: '#f0f8ff', borderColor: '#d0e0ff' },
+  comparisonContainer: { 
+    flexDirection: 'column', 
+    gap: 10 
+  },
+  compareBox: { 
+    padding: 10, 
+    borderRadius: 6, 
+    borderWidth: 1 
+  },
+  boxOld: { 
+    backgroundColor: theme.COLORS.WHITE1,
+    borderColor: theme.COLORS.WHITE1 
+  },
+  boxNew: { 
+    backgroundColor: theme.COLORS.WHITE3,
+    borderColor: theme.COLORS.BLUE2
+  },
   boxHeader: {
-    fontSize: 10, fontWeight: '900', color: '#888', marginBottom: 5,
+    fontSize: 10, 
+    fontWeight: '900', 
+    color: theme.COLORS.BLACK3, 
+    marginBottom: 5,
     textTransform: 'uppercase'
   },
-  valueText: { fontSize: 15, color: '#222' },
-  missingText: { fontStyle: 'italic', color: '#999', fontSize: 13 },
-  imagePreview: { width: '100%', height: 150, borderRadius: 6, backgroundColor: '#eee' },
-  tagsContainer: { flexDirection: "row", flexWrap: "wrap", marginTop: 2 },
-  tag: {
-    backgroundColor: "#fff", borderRadius: 15, paddingHorizontal: 10,
-    paddingVertical: 4, marginRight: 6, marginBottom: 6,
-    borderWidth: 1, borderColor: "#ccc"
+  valueText: { 
+    fontSize: 15, 
+    color: theme.COLORS.BLACK2 
   },
-  tagText: { fontSize: 12, color: "#555" },
-  actionsContainer: { marginTop: 20 },
-  divider: { height: 1, backgroundColor: '#ddd', marginVertical: 20 },
+  missingText: { 
+    fontStyle: 'italic', 
+    color: theme.COLORS.BLACK3, 
+    fontSize: 13 
+  },
+  imagePreview: { 
+    width: '100%', 
+    height: 150, 
+    borderRadius: 6, 
+    backgroundColor: theme.COLORS.WHITE1 
+  },
+  tagsContainer: { 
+    flexDirection: "row", 
+    flexWrap: "wrap", 
+    marginTop: 2 
+  },
+  tag: {
+    backgroundColor: theme.COLORS.WHITE3, 
+    borderRadius: 15, 
+    paddingHorizontal: 10,
+    paddingVertical: 4, 
+    marginRight: 6, 
+    marginBottom: 6,
+    borderWidth: 1, 
+    borderColor: theme.COLORS.WHITE1 
+  },
+  tagText: { 
+    fontSize: 12, 
+    color: theme.COLORS.BLACK3 
+  },
+  actionsContainer: { 
+    marginTop: 20 
+  },
+  divider: { 
+    height: 1, 
+    backgroundColor: theme.COLORS.WHITE1, 
+    marginVertical: 20 
+  },
   rejectContainer: {
-    marginTop: 20, backgroundColor: '#FFF5F5', padding: 15,
-    borderRadius: 8, borderWidth: 1, borderColor: '#ffe0e0'
+    marginTop: 20, 
+    backgroundColor: theme.COLORS.WHITE3,
+    padding: 15,
+    borderRadius: 8, 
+    borderWidth: 1, 
+    borderColor: theme.COLORS.RED3
   },
   rejectInput: {
-    height: 80, textAlignVertical: "top", backgroundColor: '#fff',
-    marginBottom: 10, paddingTop: 10, fontSize: 14
+    height: 80, 
+    textAlignVertical: "top", 
+    backgroundColor: theme.COLORS.WHITE2,
+    marginBottom: 10, 
+    paddingTop: 10, 
+    fontSize: 14,
+    borderColor: theme.COLORS.WHITE1,
+    borderWidth: 1,
+    borderRadius: 4
   },
   noChangeContainer: {
-    padding: 20, backgroundColor: '#FFFBE6', borderWidth: 1,
-    borderColor: '#FFE58F', borderRadius: 8
+    padding: 20, 
+    backgroundColor: theme.COLORS.WHITE2, 
+    borderWidth: 1,
+    borderColor: theme.COLORS.YELLOW1, 
+    borderRadius: 8
   },
-  noChangeText: { color: '#856404', textAlign: 'center' }
+  noChangeText: { 
+    color: theme.COLORS.BLACK2, 
+    textAlign: 'center' 
+  }
 });

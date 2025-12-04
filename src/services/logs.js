@@ -11,6 +11,5 @@ export async function logAction(acao, contexto = {}) {
       contexto,
     });
   } catch (e) {
-    console.log('Erro ao registrar log:', e);
   }
 }

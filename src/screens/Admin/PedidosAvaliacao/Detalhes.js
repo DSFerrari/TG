@@ -67,7 +67,6 @@ export default function DetalhesPedido({ route, navigation }) {
       Alert.alert("Sucesso", "Avaliação excluída permanentemente.");
       navigation.goBack();
     } catch (error) {
-      console.log("ERRO DELETE:", error);
       Alert.alert("Erro", "Não foi possível excluir: " + error.message);
     } finally { 
       setLoading(false); 
@@ -87,7 +86,6 @@ export default function DetalhesPedido({ route, navigation }) {
       Alert.alert("Feito", "Pedido rejeitado. A avaliação foi mantida.");
       navigation.goBack();
     } catch (error) {
-      console.log("ERRO UPDATE:", error);
       Alert.alert("Erro", "Falha ao atualizar status.");
     } finally { 
       setLoading(false); 

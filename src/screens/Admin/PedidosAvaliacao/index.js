@@ -31,7 +31,6 @@ export default function PedidosAvaliacao({ navigation }) {
       `)
       .order("data_criacao", { ascending: false });
     if (error) {
-      console.log("ERRO:", error);
     } else {
       setPedidos(data || []);
     }

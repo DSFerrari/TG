@@ -10,6 +10,7 @@ import AdminRoutes from "./admin.routes";
 
 import TermosUsoModal from "../components/TermoUso";
 import { supabase } from "../services/supabase"; 
+import theme from "../theme";
 
 const VERSAO_ATUAL_TERMOS = 'v1'; 
 
@@ -42,7 +43,6 @@ export default function Routes() {
         }
 
       } catch (err) {
-        console.log("Erro ao verificar termos:", err);
       } finally {
         setCheckingTerms(false);
       }
@@ -69,7 +69,6 @@ export default function Routes() {
       setShowTermsModal(false);
 
     } catch (err) {
-      console.log("Erro ao salvar aceite:", err);
       Alert.alert(
         "Erro", 
         "Não foi possível salvar seu aceite. Verifique sua conexão e tente novamente."
@@ -81,23 +80,27 @@ export default function Routes() {
 
   if (loading || loadingProfile || (signed && checkingTerms)) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#F0F1FF" }}>
-        <ActivityIndicator size="large" color="#131313" />
+      <View style={{ 
+        flex: 1, 
+        justifyContent: "center", 
+        alignItems: "center", 
+        backgroundColor: theme.COLORS.WHITE3
+      }}>
+        <ActivityIndicator size="large" color={theme.COLORS.BLUE1} /> 
       </View>
     );
   }
-
 
   if (!signed) return <AuthRoutes />;
   if (isRecoveringPassword) return <AuthRoutes />;
 
   if (showTermsModal) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#fff' }}>
+      <View style={{ flex: 1, backgroundColor: theme.COLORS.WHITE3 }}> 
         {savingTerms && (
            <ActivityIndicator 
               size="small" 
-              color="#000" 
+              color={theme.COLORS.BLUE1}
               style={{ position: 'absolute', top: 50, right: 20, zIndex: 99 }} 
            />
         )}

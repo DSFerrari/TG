@@ -5,7 +5,6 @@ import {
   Text, 
   ScrollView, 
   StyleSheet, 
-  TouchableOpacity, 
   Dimensions 
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -86,14 +85,13 @@ export default function TermosUsoModal({ visible, onAccept, onClose, apenasLeitu
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.COLORS.WHITE || '#FFFFFF',
+    backgroundColor: theme.COLORS.WHITE3,
     padding: 20,
   },
   header: {
     marginBottom: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#DDD',
-    paddingBottom: 15,
+    borderBottomColor: theme.COLORS.WHITE1,
   },
   title: {
     fontSize: 26,
@@ -103,7 +101,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
-    color: '#444',
+    color: theme.COLORS.BLACK3,
     lineHeight: 24,
   },
   content: {
@@ -112,7 +110,7 @@ const styles = StyleSheet.create({
   paragraph: {
     fontSize: 18,
     lineHeight: 28,
-    color: '#333',
+    color: theme.COLORS.BLACK2,
     marginBottom: 20,
     textAlign: 'left',
   },
@@ -123,6 +121,6 @@ const styles = StyleSheet.create({
   footer: {
     paddingTop: 20,
     borderTopWidth: 1,
-    borderTopColor: '#DDD',
+    borderTopColor: theme.COLORS.WHITE1,
   }
 });

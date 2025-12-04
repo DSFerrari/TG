@@ -77,7 +77,6 @@ export default function ConfirmEmailScreen() {
 
         } catch (error) {
 
-            console.log("Erro na verificação:", error);
 
         }
 

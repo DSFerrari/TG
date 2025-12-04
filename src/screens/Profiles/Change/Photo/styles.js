@@ -31,14 +31,14 @@ export const styles = StyleSheet.create({
     borderRadius: 12,
   },
   previewText: {
-    color: '#FFFFFF',
+    color: theme.COLORS.WHITE3,
     fontSize: 12,
     fontWeight: 'bold',
   },
   info: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E3F2FD',
+    backgroundColor: theme.COLORS.WHITE2,
     padding: 16,
     borderRadius: 12,
     marginBottom: 24,
@@ -55,17 +55,17 @@ export const styles = StyleSheet.create({
   optionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.COLORS.WHITE3,
     padding: 16,
     borderRadius: 12,
-    shadowColor: '#000',
+    shadowColor: theme.COLORS.BLACK1,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 2,
   },
   removeButton: {
-    backgroundColor: '#FFF5F5',
+    backgroundColor: theme.COLORS.WHITE1,
   },
   iconContainer: {
     width: 48,
@@ -81,7 +81,7 @@ export const styles = StyleSheet.create({
   optionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
+    color: theme.COLORS.BLACK1,
     marginBottom: 4,
   },
   removeTitle: {
@@ -89,7 +89,7 @@ export const styles = StyleSheet.create({
   },
   optionSubtitle: {
     fontSize: 13,
-    color: '#666',
+    color: theme.COLORS.BLACK3,
   },
   actionButtons: {
     flexDirection: 'row',
@@ -98,7 +98,7 @@ export const styles = StyleSheet.create({
   },
   cancelButton: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: theme.COLORS.WHITE1,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
@@ -106,7 +106,7 @@ export const styles = StyleSheet.create({
   cancelButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#666',
+    color: theme.COLORS.BLACK3,
   },
   saveButton: {
     flex: 2,
@@ -116,7 +116,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
   saveButtonText: {
-    color: '#FFFFFF',
+    color: theme.COLORS.WHITE3,
     fontSize: 16,
     fontWeight: 'bold',
   },

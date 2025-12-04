@@ -39,7 +39,6 @@ export default function MinhasAvaliacoes() {
       if (error) throw error;
       setAvaliacoes(data || []);
     } catch (error) {
-      console.log(error);
       Alert.alert("Erro", "Não foi possível carregar suas avaliações.");
     } finally {
       setLoading(false);
@@ -80,7 +79,7 @@ const renderStars = (nota) => {
           key={i} 
           name={i <= nota ? "star" : "star-outline"} 
           size={16} 
-          color="#FFD700" 
+          color={theme.COLORS.YELLOW1}
         />
       );
     }
@@ -103,7 +102,7 @@ const renderStars = (nota) => {
           onPress={() => handleDelete(item.id)}
           style={styles.deleteButton}
         >
-          <Ionicons name="trash-outline" size={24} color="#FF4444" />
+          <Ionicons name="trash-outline" size={24} color={theme.COLORS.RED2} /> 
         </TouchableOpacity>
       </View>
 
@@ -119,7 +118,7 @@ const renderStars = (nota) => {
       <Text style={styles.screenTitle}>Minhas Avaliações</Text>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#000" style={{ marginTop: 20 }} />
+        <ActivityIndicator size="large" color={theme.COLORS.BLUE1} style={{ marginTop: 20 }} />
       ) : (
         <FlatList
           data={avaliacoes}
@@ -145,30 +144,32 @@ const renderStars = (nota) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.COLORS.WHITE3,
+    backgroundColor: theme.COLORS.WHITE2,
   },
   screenTitle: {
     fontSize: 22,
     fontWeight: 'bold',
     margin: 20,
-    color: '#333',
+    color: theme.COLORS.BLACK1,
   },
   listContent: {
     paddingHorizontal: 20,
     paddingBottom: 20,
   },
   card: {
-    backgroundColor: '#FFF',
+    backgroundColor: theme.COLORS.WHITE3,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
 
-    shadowColor: "#000",
+    shadowColor: theme.COLORS.BLACK1,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-
     elevation: 3,
+
+    borderWidth: 1,
+    borderColor: theme.COLORS.WHITE1,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -179,11 +180,11 @@ const styles = StyleSheet.create({
   estabName: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#222',
+    color: theme.COLORS.BLACK1,
   },
   date: {
     fontSize: 12,
-    color: '#888',
+    color: theme.COLORS.BLACK3,
     marginTop: 2,
   },
   deleteButton: {
@@ -196,17 +197,18 @@ const styles = StyleSheet.create({
   reviewTitle: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#333',
+    color: theme.COLORS.BLACK1,
     marginBottom: 4,
   },
   reviewText: {
     fontSize: 14,
-    color: '#555',
+    color: theme.COLORS.BLACK2,
     lineHeight: 20,
   },
   emptyText: {
     textAlign: 'center',
-    color: '#999',
+    color: theme.COLORS.BLACK3,
+    
     marginTop: 40,
     fontSize: 16,
   }
